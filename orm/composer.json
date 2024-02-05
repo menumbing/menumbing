@@ -55,7 +55,7 @@
             "config": "Menumbing\\Orm\\ConfigProvider"
         },
         "branch-alias": {
-            "dev-main": "1.x-dev"
+            "dev-master": "1.x-dev"
         }
     }
 }
