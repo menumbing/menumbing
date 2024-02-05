@@ -1,0 +1,59 @@
+name: Split Monorepo
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - 'master'
+
+jobs:
+  split_monorepo:
+    name: Split Monorepo
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # define package to repository map
+        package:
+          # Components
+          - local_path: 'contract'
+            split_repository: 'contract'
+          - local_path: 'http-client'
+            split_repository: 'http-client'
+          - local_path: 'orm'
+            split_repository: 'orm'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # no tag
+      - if: "!startsWith(github.ref, 'refs/tags/')"
+        name: Monorepo Split of ${{ matrix.package }}
+        uses: "symplify/monorepo-split-github-action@v2.3.0"
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        with:
+          branch: "master"
+          package_directory: 'src/${{ matrix.package.local_path }}'
+          repository_organization: 'menumbing'
+          repository_name: '${{ matrix.package.split_repository }}'
+          user_name: "Pandawa Developers"
+          user_email: "developer@pandawa.io"
+
+      # with tag
+      - if: "startsWith(github.ref, 'refs/tags/')"
+        name: Monorepo Tagged Split of ${{ matrix.package }}
+        uses: "symplify/monorepo-split-github-action@v2.3.0"
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        with:
+          tag: ${GITHUB_REF#refs/tags/}
+          branch: "master"
+          package_directory: 'src/${{ matrix.package.local_path }}'
+          repository_organization: 'menumbing'
+          repository_name: '${{ matrix.package.split_repository }}'
+          user_name: "Pandawa Developers"
+          user_email: "developer@pandawa.io"
