@@ -25,6 +25,8 @@ jobs:
             split_repository: 'http-client'
           - local_path: 'orm'
             split_repository: 'orm'
+          - local_path: 'resource'
+            split_repository: 'resource'
 
     steps:
       - uses: actions/checkout@v2
