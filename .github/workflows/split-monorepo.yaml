@@ -27,6 +27,8 @@ jobs:
             split_repository: 'orm'
           - local_path: 'resource'
             split_repository: 'resource'
+          - local_path: 'signature'
+            split_repository: 'signature'
 
     steps:
       - uses: actions/checkout@v2

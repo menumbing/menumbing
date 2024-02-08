@@ -30,7 +30,9 @@
         "hyperf/pipeline": "^3.1",
         "hyperf/http-server": "^3.1",
         "symfony/http-foundation": "^6.4",
-        "hyperf/resource": "^3.1"
+        "hyperf/resource": "^3.1",
+        "ramsey/uuid": "^4.7",
+        "menumbing/auth": "^1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
