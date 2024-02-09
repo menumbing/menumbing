@@ -34,6 +34,7 @@
         "swoole/ide-helper": "^4.5"
     },
     "suggest": {
+        "hyperf/validation": "Required to use validation exception handler.",
         "swow/swow": "Required to create swow components."
     },
     "minimum-stability": "dev",

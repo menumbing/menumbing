@@ -33,7 +33,8 @@
         "hyperf/resource": "^3.1",
         "ramsey/uuid": "^4.7",
         "menumbing/auth": "^1.0",
-        "hyperf/exception-handler": "^3.1"
+        "hyperf/exception-handler": "^3.1",
+        "hyperf/validation": "^3.1"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
