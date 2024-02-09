@@ -35,6 +35,10 @@ class Client extends Model implements AuthenticatableInterface, ClientInterface,
         'status' => ClientStatus::class,
     ];
 
+    protected array $hidden = [
+        'secret',
+    ];
+
     protected array $fillable = [
         'id',
         'name',
