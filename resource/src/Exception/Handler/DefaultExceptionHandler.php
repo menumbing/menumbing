@@ -25,10 +25,7 @@ class DefaultExceptionHandler extends ExceptionHandler
         $this->stopPropagation();
 
         if ($this->resource->supports($throwable)) {
-            $response = $this->resource->render($throwable)->toResponse();
-            $response->setStatus($this->getStatusCode($throwable));
-
-            return $response;
+            return $this->resource->render($throwable);
         }
 
         return $response
