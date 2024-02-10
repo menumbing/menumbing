@@ -9,8 +9,10 @@ use Hyperf\Database\Model\Concerns\HasUuids;
 use HyperfExtension\Auth\Authenticatable;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use Menumbing\Contract\Signature\ClientInterface;
+use Menumbing\Orm\Contract\CacheableInterface;
 use Menumbing\Orm\Contract\HasDomainEventInterface;
 use Menumbing\Orm\Model;
+use Menumbing\Orm\Trait\Cacheable;
 use Menumbing\Orm\Trait\HasDomainEvent;
 use Menumbing\Signature\Constant\ClientStatus;
 use Menumbing\Signature\Event\ClientGenerated;
@@ -25,11 +27,12 @@ use Menumbing\Signature\Event\ClientGenerated;
  *
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-class Client extends Model implements AuthenticatableInterface, ClientInterface, HasDomainEventInterface
+class Client extends Model implements AuthenticatableInterface, ClientInterface, HasDomainEventInterface, CacheableInterface
 {
     use HasUuids;
     use Authenticatable;
     use HasDomainEvent;
+    use Cacheable;
 
     protected array $casts = [
         'status' => ClientStatus::class,
