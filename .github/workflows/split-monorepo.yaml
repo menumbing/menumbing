@@ -29,6 +29,8 @@ jobs:
             split_repository: 'resource'
           - local_path: 'signature'
             split_repository: 'signature'
+          - local_path: 'tracer'
+            split_repository: 'tracer'
 
     steps:
       - uses: actions/checkout@v2
