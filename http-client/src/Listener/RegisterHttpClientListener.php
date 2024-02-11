@@ -51,13 +51,10 @@ final class RegisterHttpClientListener implements ListenerInterface
                     $name = $namespace.'.'.$name;
                 }
 
-                $this->container->define($name, function () use ($option, $name) {
+                $this->container->define($name, function () use ($option) {
                     $factory = ApplicationContext::getContainer()->get(HttpClientFactoryInterface::class);
 
-                    return $factory->create([
-                        ...$this->makeConfig($option),
-                        'name' => $name,
-                    ]);
+                    return $factory->create($this->makeConfig($option));
                 });
             }
         }
