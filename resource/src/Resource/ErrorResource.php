@@ -8,6 +8,7 @@ use Hyperf\Contract\Arrayable;
 use Hyperf\HttpMessage\Exception\HttpException;
 use Hyperf\Resource\Json\JsonResource as BaseJsonResource;
 use Menumbing\Resource\Trait\AdditionalMetadata;
+use Psr\Http\Message\ResponseInterface;
 use ReflectionObject;
 use Throwable;
 
@@ -47,6 +48,10 @@ class ErrorResource extends BaseJsonResource
     public function getStatusCode(): int
     {
         if (!$this->resource instanceof Throwable) {
+            if ($this->resource instanceof ResponseInterface) {
+                return $this->resource->getStatusCode();
+            }
+
             return parent::getStatusCode();
         }
 
