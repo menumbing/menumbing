@@ -9,6 +9,8 @@ use Hyperf\ExceptionHandler\ExceptionHandler;
 use Hyperf\Validation\ValidationException;
 use Menumbing\Resource\Contract\ResourceStrategyInterface;
 use Menumbing\Resource\Resource\ValidationErrorResource;
+use Menumbing\Resource\Trait\MergeResponse;
+use Psr\Http\Message\ResponseInterface;
 use Swow\Psr7\Message\ResponsePlusInterface;
 use Throwable;
 
@@ -17,6 +19,8 @@ use Throwable;
  */
 class ValidationExceptionHandler extends ExceptionHandler
 {
+    use MergeResponse;
+
     #[Inject]
     protected ResourceStrategyInterface $resource;
 
@@ -31,7 +35,11 @@ class ValidationExceptionHandler extends ExceptionHandler
         if ($this->resource->supports($throwable)) {
             $this->stopPropagation();
 
-            return $this->resource->render(new ValidationErrorResource($throwable));
+            $resource = $this->resource->render(new ValidationErrorResource($throwable));
+
+            if ($resource instanceof ResponseInterface) {
+                $response = $this->mergeAll($response, $resource);
+            }
         }
 
         return $response;

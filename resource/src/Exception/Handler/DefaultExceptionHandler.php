@@ -9,6 +9,8 @@ use Hyperf\ExceptionHandler\ExceptionHandler;
 use Hyperf\HttpMessage\Exception\HttpException;
 use Hyperf\HttpMessage\Stream\SwooleStream;
 use Menumbing\Resource\Contract\ResourceStrategyInterface;
+use Menumbing\Resource\Trait\MergeResponse;
+use Psr\Http\Message\ResponseInterface;
 use Swow\Psr7\Message\ResponsePlusInterface;
 use Throwable;
 
@@ -17,15 +19,21 @@ use Throwable;
  */
 class DefaultExceptionHandler extends ExceptionHandler
 {
+    use MergeResponse;
+
     #[Inject]
     protected ResourceStrategyInterface $resource;
 
     public function handle(Throwable $throwable, ResponsePlusInterface $response)
     {
-        $this->stopPropagation();
-
         if ($this->resource->supports($throwable)) {
-            return $this->resource->render($throwable);
+            $this->stopPropagation();
+
+            $resource = $this->resource->render($throwable);
+
+            if ($resource instanceof ResponseInterface) {
+                $response = $this->mergeAll($response, $resource);
+            }
         }
 
         return $response
