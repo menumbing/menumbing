@@ -11,6 +11,9 @@ declare(strict_types=1);
  */
 namespace Menumbing\Orm;
 
+use Hyperf\Database\Commands\Migrations\InstallCommand;
+use Hyperf\Database\Commands\Migrations\MigrateCommand;
+use Hyperf\Database\Commands\Seeders\SeedCommand;
 use Menumbing\Orm\Contract\PersistentInterface;
 use Menumbing\Orm\Contract\QueryBuilderFactoryInterface;
 use Menumbing\Orm\Contract\RepositoryFactoryInterface;
@@ -27,6 +30,11 @@ class ConfigProvider
                 QueryBuilderFactoryInterface::class => QueryBuilderFactory::class,
                 RepositoryFactoryInterface::class => RepositoryFactory::class,
                 PersistentInterface::class => PersistentFactory::class,
+            ],
+            'commands' => [
+                MigrateCommand::class,
+                InstallCommand::class,
+                SeedCommand::class,
             ],
             'annotations' => [
                 'scan' => [
