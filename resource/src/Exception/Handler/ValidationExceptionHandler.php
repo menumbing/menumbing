@@ -38,8 +38,10 @@ class ValidationExceptionHandler extends ExceptionHandler
             $resource = $this->resource->render(new ValidationErrorResource($throwable));
 
             if ($resource instanceof ResponseInterface) {
-                $response = $this->mergeAll($response, $resource);
+                $resource = $this->mergeAll($response, $resource);
             }
+
+            return $resource;
         }
 
         return $response;
