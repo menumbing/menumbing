@@ -6,7 +6,7 @@ namespace Menumbing\Signature\Guard;
 
 use DateTime;
 use DateTimeZone;
-use Hyperf\Di\Annotation\Inject;
+use Hyperf\Context\ApplicationContext;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use HyperfExtension\Auth\Contracts\GuardInterface;
 use HyperfExtension\Auth\Contracts\UserProviderInterface;
@@ -14,6 +14,7 @@ use HyperfExtension\Auth\Exceptions\AuthenticationException;
 use HyperfExtension\Auth\GuardHelpers;
 use Menumbing\Contract\Signature\ClaimInterface;
 use Menumbing\Contract\Signature\ClientInterface;
+use Menumbing\Contract\Signature\SignatureInterface;
 use Menumbing\Contract\Signature\SignerInterface;
 use Menumbing\Signature\Claim;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,9 +26,6 @@ use RuntimeException;
 class SignatureGuard implements GuardInterface
 {
     use GuardHelpers;
-
-    #[Inject]
-    protected SignerInterface $signer;
 
     protected string $headerClientIdKey;
 
@@ -70,7 +68,7 @@ class SignatureGuard implements GuardInterface
         $headers = $this->getHeadersFromRequest($this->request);
 
         if ($this->validate($headers) && null != $client = $this->findClientId($clientId)) {
-            $signature = $this->signer->sign($clientId, $client->getSecret(), $this->getClaimFromRequest($this->request));
+            $signature = $this->sign($clientId, $client->getSecret(), $this->getClaimFromRequest($this->request));
 
             if (!$signature->isValid($this->request)) {
                 throw new AuthenticationException('Invalid signature.');
@@ -127,7 +125,7 @@ class SignatureGuard implements GuardInterface
         $requestBody = (string) $request->getBody();
 
         return new Claim(
-            targetPath: '/' . $request->path(),
+            targetPath: '/' . ltrim($request->path(), '/'),
             body: !empty($requestBody) ? $requestBody : null,
             algo: $this->getAlgo($request),
             requestId: $request->getHeaderLine($this->headerRequestIdKey),
@@ -173,5 +171,12 @@ class SignatureGuard implements GuardInterface
         $algo = substr($signature, 0, strpos($signature, '='));
 
         return strtolower(str_replace('HMAC', '', $algo));
+    }
+
+    protected function sign(string $clientId, string $clientSecret, Claim $claim): SignatureInterface
+    {
+        $signer = ApplicationContext::getContainer()->get(SignerInterface::class);
+
+        return $signer->sign($clientId, $clientSecret, $claim);
     }
 }

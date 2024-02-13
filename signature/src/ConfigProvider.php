@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace Menumbing\Signature;
 
 use Menumbing\Contract\Signature\SignerInterface;
+use Menumbing\Signature\Command\GenerateClientCommand;
+use Menumbing\Signature\Contract\ClientRepositoryInterface;
+use Menumbing\Signature\Factory\ClientRepositoryFactory;
 
 class ConfigProvider
 {
@@ -20,15 +23,18 @@ class ConfigProvider
         return [
             'dependencies' => [
                 SignerInterface::class => HashSigner::class,
+                ClientRepositoryInterface::class => ClientRepositoryFactory::class,
             ],
-            'annotations' => [
-                'scan' => [
-                    'paths' => [
-                        __DIR__,
-                    ],
-                ],
+            'commands' => [
+                GenerateClientCommand::class,
             ],
             'publish' => [
+                [
+                    'id' => 'config',
+                    'description' => 'The config for signature.',
+                    'source' => __DIR__ . '/../publish/signature.php',
+                    'destination' => BASE_PATH . '/config/autoload/signature.php',
+                ],
                 [
                     'id' => 'migration:client',
                     'description' => 'The client migration.',

@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Menumbing\Signature\Command;
 
-use Hyperf\Command\Annotation\Command;
 use Hyperf\Command\Command as HyperfCommand;
 use Menumbing\Signature\Contract\ClientRepositoryInterface;
-use Menumbing\Signature\Model\Client;
 use Psr\Container\ContainerInterface;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-#[Command]
 class GenerateClientCommand extends HyperfCommand
 {
     protected ?string $signature = 'gen:client';
@@ -25,8 +22,8 @@ class GenerateClientCommand extends HyperfCommand
 
     public function handle(): void
     {
-        $client = $this->clientRepository()->save(
-            Client::generate($this->alwaysAsk('Please enter the client name'))
+        $client = $this->clientRepository()->generateNewClient(
+            $this->alwaysAsk('Please enter the client name')
         );
 
         $this->info('Client ID: ' . $client->getId());
