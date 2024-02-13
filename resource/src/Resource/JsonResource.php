@@ -20,4 +20,15 @@ class JsonResource extends BaseJsonResource
 
         $this->withMetadata();
     }
+
+    public function toArray(): array
+    {
+        if (is_scalar($this->resource)) {
+            return [
+                $this->wrap => $this->resource,
+            ];
+        }
+
+        return parent::toArray();
+    }
 }
