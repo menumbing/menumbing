@@ -74,10 +74,11 @@ final class RegisterHttpClientListener implements ListenerInterface
         return [
             'options'         => [
                 ...($config['defaults'] ?? []),
-                ...(Arr::except($option, ['middlewares', 'handler_factory'])),
+                ...(Arr::except($option, ['middlewares', 'handler_factory', 'handler_options'])),
             ],
             'middlewares'     => $middlewares,
             'handler_factory' => $option['handler_factory'] ?? $config['handler_factory'],
+            'handler_options' => $option['handler_options'] ?? [],
         ];
     }
 

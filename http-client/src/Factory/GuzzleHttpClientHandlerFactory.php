@@ -22,12 +22,12 @@ final class GuzzleHttpClientHandlerFactory implements HttpClientHandlerFactoryIn
     {
     }
 
-    public function create(array $middlewares = []): callable
+    public function create(array $middlewares = [], array $options = []): callable
     {
         $handler = null;
         if (Coroutine::inCoroutine()) {
             $handler = make(PoolHandler::class, [
-                'option' => $this->options
+                'option' => array_replace($this->options, $options)
             ]);
         }
 

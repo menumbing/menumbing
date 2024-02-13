@@ -33,7 +33,7 @@ final class GuzzleHttpClientFactory implements HttpClientFactoryInterface
 
         $handlerFactory = make($handlerClass, $parameters['handler_factory'][1] ?? []);
 
-        $handler = $handlerFactory->create($parameters['middlewares'] ?? []);
+        $handler = $handlerFactory->create($parameters['middlewares'] ?? [], $parameters['handler_options'] ?? []);
 
         return make(Client::class, [
             'config' => [

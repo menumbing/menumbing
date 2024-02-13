@@ -9,5 +9,5 @@ namespace Menumbing\Contract\HttpClient;
  */
 interface HttpClientHandlerFactoryInterface
 {
-    public function create(array $middlewares = []): callable;
+    public function create(array $middlewares = [], array $options = []): callable;
 }
