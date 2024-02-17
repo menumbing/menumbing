@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Menumbing\Contract\AsyncQueue;
 
 use Generator;
-use Hyperf\AsyncQueue\MessageInterface;
 use Throwable;
 
 /**
@@ -13,13 +12,15 @@ use Throwable;
  */
 interface FailedQueueRecorderInterface
 {
-    public function record(MessageInterface $payload, Throwable $exception): void;
+    public function record(string $id, string $pool, string $payload, Throwable $exception): void;
 
-    public function all(): Generator;
+    public function all(?string $pool = null): Generator;
 
-    public function find(mixed $id): ?object;
+    public function count(?string $pool = null): int;
 
-    public function forget(mixed $id): bool;
+    public function find(string $id): ?object;
 
-    public function flush(): void;
+    public function forget(string $id): bool;
+
+    public function flush(?string $pool = null): int;
 }
