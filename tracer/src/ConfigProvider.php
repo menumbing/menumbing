@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Menumbing\Tracer;
 
 use Menumbing\Tracer\Aspect\GuzzleHttpClientHandlerFactoryAspect;
-use Menumbing\Tracer\Aspect\MethodAspect;
 use Menumbing\Tracer\Listener\DisableTraceHyperfGuzzle;
 
 class ConfigProvider
@@ -25,7 +24,6 @@ class ConfigProvider
             ],
             'aspects' => [
                 GuzzleHttpClientHandlerFactoryAspect::class,
-                MethodAspect::class,
             ],
             'annotations' => [
                 'scan' => [

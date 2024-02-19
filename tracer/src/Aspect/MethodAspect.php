@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Menumbing\Tracer\Aspect;
 
-use Hyperf\Contract\ConfigInterface;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\Tracer\SpanStarter;
@@ -15,13 +14,12 @@ use Throwable;
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-class MethodAspect extends AbstractAspect
+abstract class MethodAspect extends AbstractAspect
 {
     use SpanStarter;
 
-    public function __construct(protected SwitchManager $switchManager, ConfigInterface $config)
+    public function __construct(protected SwitchManager $switchManager)
     {
-        $this->classes = $config->get('opentracing.enable.trace_methods', []);
     }
 
     /**
