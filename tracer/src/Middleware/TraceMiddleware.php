@@ -8,7 +8,6 @@ use Hyperf\Contract\ConfigInterface;
 use Hyperf\Coroutine\Coroutine;
 use Hyperf\ExceptionHandler\ExceptionHandlerDispatcher;
 use Hyperf\HttpMessage\Exception\HttpException;
-use Hyperf\HttpServer\Router\Dispatched;
 use Hyperf\Tracer\SpanStarter;
 use Hyperf\Tracer\SpanTagManager;
 use Hyperf\Tracer\SwitchManager;
@@ -41,8 +40,6 @@ class TraceMiddleware implements MiddlewareInterface
     {
         $tracer = TracerContext::getTracer();
         $span = $this->buildRequestSpan($request);
-        /** @var Dispatched $dispatched */
-        $dispatched = $request->getAttribute(Dispatched::class);
 
         defer(function () use ($tracer) {
             try {
@@ -52,6 +49,9 @@ class TraceMiddleware implements MiddlewareInterface
         });
         try {
             $response = $handler->handle($request);
+
+            $this->buildResponseSpan($span, $response);
+
             if ($traceId = TracerContext::getTraceId()) {
                 $response = $response->withHeader('Trace-Id', $traceId);
             }
@@ -64,12 +64,10 @@ class TraceMiddleware implements MiddlewareInterface
                 $span->setTag($this->spanTagManager->get('response', 'status_code'), (string) $exception->getStatusCode());
             }
 
-            $response = $this->exceptionHandler->dispatch($exception, $this->config->get('exceptions.handler.' . $dispatched->serverName));
+            throw $exception;
+        } finally {
+            $span->finish();
         }
-
-        $this->buildResponseSpan($span, $response);
-
-        $span->finish();
 
         return $response;
     }
@@ -77,10 +75,13 @@ class TraceMiddleware implements MiddlewareInterface
     protected function appendExceptionToSpan(Span $span, Throwable $exception): void
     {
         $span->setTag('error', true);
-        $span->setTag($this->spanTagManager->get('exception', 'class'), get_class($exception));
-        $span->setTag($this->spanTagManager->get('exception', 'code'), (string) $exception->getCode());
-        $span->setTag($this->spanTagManager->get('exception', 'message'), $exception->getMessage());
-        $span->setTag($this->spanTagManager->get('exception', 'stack_trace'), (string) $exception);
+
+        if ($this->switchManager->isEnable('exception') && ! $this->switchManager->isIgnoreException($exception)) {
+            $span->setTag($this->spanTagManager->get('exception', 'class'), get_class($exception));
+            $span->setTag($this->spanTagManager->get('exception', 'code'), (string) $exception->getCode());
+            $span->setTag($this->spanTagManager->get('exception', 'message'), $exception->getMessage());
+            $span->setTag($this->spanTagManager->get('exception', 'stack_trace'), (string) $exception);
+        }
     }
 
     protected function buildRequestSpan(ServerRequestInterface $request): Span
