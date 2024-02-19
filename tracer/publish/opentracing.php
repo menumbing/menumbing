@@ -29,6 +29,7 @@ return [
         'request_body' => (bool) env('TRACER_ENABLE_REQUEST_BODY', false),
         'response_body' => (bool) env('TRACER_ENABLE_RESPONSE_BODY', false),
         'ignore_exceptions' => [],
+        'trace_methods' => [],
     ],
     'tracer' => [
         'zipkin' => [
