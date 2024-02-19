@@ -22,6 +22,7 @@ class RequestTraceListener extends BaseRequestTraceListener
 {
     public function __construct(protected SwitchManager $switchManager, protected SpanTagManager $spanTagManager)
     {
+        parent::__construct($this->switchManager, $this->spanTagManager);
     }
 
     #[Override]
