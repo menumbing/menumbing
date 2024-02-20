@@ -35,12 +35,12 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
                 $response = $handler($this->injectTracer($span, $request), $options);
 
                 $response->then(
-                    static function (ResponseInterface $response) use ($span, $options) {
+                    function (ResponseInterface $response) use ($span, $options) {
                         $this->appendResponseSpanTags($span, $response, $options);
 
                         return $response;
                     },
-                    static function (Throwable $exception) use ($span) {
+                    function (Throwable $exception) use ($span) {
                         $span->setTag('error', true);
 
                         $span->setTag('http.response.body', $exception->getMessage());
