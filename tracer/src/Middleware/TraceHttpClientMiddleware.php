@@ -12,6 +12,7 @@ use Menumbing\Tracer\Constant\HttpClientTrace;
 use OpenTracing\Span;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 use const OpenTracing\Formats\TEXT_MAP;
 
@@ -33,11 +34,18 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
                 /** @var PromiseInterface $response */
                 $response = $handler($this->injectTracer($span, $request), $options);
 
-                $response->then(function (ResponseInterface $response) use ($span, $options) {
-                    $this->appendResponseSpanTags($span, $response, $options);
+                $response->then(
+                    static function (ResponseInterface $response) use ($span, $options) {
+                        $this->appendResponseSpanTags($span, $response, $options);
 
-                    return $response;
-                });
+                        return $response;
+                    },
+                    static function (Throwable $exception) use ($span) {
+                        $span->setTag('error', true);
+
+                        $span->setTag('http.response.body', $exception->getMessage());
+                    }
+                );
 
                 return $response;
             };
