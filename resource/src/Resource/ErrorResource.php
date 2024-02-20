@@ -64,7 +64,7 @@ class ErrorResource extends BaseJsonResource
         if ($throwable->getCode()
             && is_int($throwable->getCode())
             && $throwable->getCode() >= 400
-            && $throwable->getCode() < 500) {
+            && $throwable->getCode() < 600) {
             return $throwable->getCode();
         }
 
