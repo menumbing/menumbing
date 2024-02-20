@@ -8,6 +8,7 @@ use Hyperf\Contract\ConfigInterface;
 use Hyperf\Coroutine\Coroutine;
 use Hyperf\ExceptionHandler\ExceptionHandlerDispatcher;
 use Hyperf\HttpMessage\Exception\HttpException;
+use Hyperf\HttpServer\Router\Dispatched;
 use Hyperf\Tracer\SpanStarter;
 use Hyperf\Tracer\SpanTagManager;
 use Hyperf\Tracer\SwitchManager;
@@ -62,6 +63,14 @@ class TraceMiddleware implements MiddlewareInterface
             if ($exception instanceof HttpException) {
                 $span->setTag($this->spanTagManager->get('response', 'status_code'), (string) $exception->getStatusCode());
             }
+
+            /** @var Dispatched $dispatched */
+            $dispatched = $request->getAttribute(Dispatched::class);
+            $response = $this->exceptionHandler->dispatch(
+                $exception, $this->config->get('exceptions.handler.' . $dispatched->serverName)
+            );
+
+            $this->buildResponseSpan($span, $response);
 
             throw $exception;
         } finally {
