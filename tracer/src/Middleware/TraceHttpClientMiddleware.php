@@ -92,6 +92,12 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
                 $span->setTag('http.request.body', $content);
             }
         }
+
+        $tags = $options[HttpClientTrace::TRACE_TAGS] ?? [];
+
+        foreach ($tags as $key => $value) {
+            $span->setTag($key, $value);
+        }
     }
 
     protected function getSpanName(RequestInterface $request, array $options): string

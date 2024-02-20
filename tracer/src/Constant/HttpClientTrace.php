@@ -14,4 +14,5 @@ class HttpClientTrace
     const TRACE_CAPTURE_BODY = 'trace.capture_request';
     const TRACE_CAPTURE_HEADERS = 'trace.capture_header';
     const TRACE_CAPTURE_RESPONSE = 'trace.capture_response';
+    const TRACE_TAGS = 'trace.tags';
 }
