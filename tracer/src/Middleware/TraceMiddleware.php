@@ -56,7 +56,6 @@ class TraceMiddleware implements MiddlewareInterface
             if ($traceId = TracerContext::getTraceId()) {
                 $response = $response->withHeader('Trace-Id', $traceId);
             }
-            $span->setTag($this->spanTagManager->get('response', 'status_code'), (string) $response->getStatusCode());
         } catch (Throwable $exception) {
             $this->appendExceptionToSpan($span, $exception);
 
@@ -114,6 +113,8 @@ class TraceMiddleware implements MiddlewareInterface
 
     protected function buildResponseSpan(Span $span, ResponseInterface $response): Span
     {
+        $span->setTag($this->spanTagManager->get('response', 'status_code'), (string) $response->getStatusCode());
+
         if ($this->switchManager->isEnable('response_body')) {
             $span->setTag('response.body', (string) $response->getBody());
         }
