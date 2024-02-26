@@ -94,12 +94,15 @@ abstract class Repository implements RepositoryInterface
 
     /**
      * @param  int  $pageSize
+     * @param  array  $columns
+     * @param  string  $pageName
+     * @param  int|null  $page
      *
      * @return LengthAwarePaginatorInterface<TModel>
      */
-    public function paginate(int $pageSize): LengthAwarePaginatorInterface
+    public function paginate(int $pageSize, array $columns = ['*'], string $pageName = 'page', ?int $page = null): LengthAwarePaginatorInterface
     {
-        return $this->query->paginate($pageSize);
+        return $this->query->paginate($pageSize, $columns, $pageName, $page);
     }
 
     /**
