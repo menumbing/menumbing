@@ -7,7 +7,11 @@
         "psr-4": {
             "Menumbing\\Contract\\": "contract",
             "Menumbing\\HttpClient\\": "http-client/src",
-            "Menumbing\\Orm\\": "orm/src"
+            "Menumbing\\Orm\\": "orm/src",
+            "Menumbing\\Resource\\": "resource/src",
+            "Menumbing\\Signature\\": "signature/src",
+            "Menumbing\\Tracer\\": "tracer/src",
+            "Menumbing\\GraphQL\\": "graphql/src"
         }
     },
     "authors": [
@@ -17,6 +21,7 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "php": ">=8.1",
         "hyperf/di": "3.1.*",
@@ -35,7 +40,12 @@
         "menumbing/auth": "^1.0",
         "hyperf/exception-handler": "^3.1",
         "hyperf/validation": "^3.1",
-        "hyperf/tracer": "^3.1"
+        "hyperf/tracer": "^3.1",
+        "psr/container": "^2.0",
+        "psr/simple-cache": "^1.0",
+        "psr/http-message": "^1.0",
+        "thecodingmachine/graphqlite": "^6.2",
+        "hyperf/http-message": "~3.1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",

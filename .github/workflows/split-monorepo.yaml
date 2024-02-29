@@ -31,6 +31,8 @@ jobs:
             split_repository: 'signature'
           - local_path: 'tracer'
             split_repository: 'tracer'
+          - local_path: 'graphql'
+            split_repository: 'graphql'
 
     steps:
       - uses: actions/checkout@v2
