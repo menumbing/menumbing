@@ -3,7 +3,7 @@
 use GraphQL\Error\DebugFlag;
 use Hyperf\Server\Event;
 use Hyperf\Server\Server;
-use Menumbing\Graphql;
+use Menumbing\GraphQL;
 
 use function Hyperf\Support\env;
 
@@ -12,7 +12,7 @@ return [
 
     'uri' => '/graphql',
 
-    'cache' => Graphql\Cache\MemoryCache::class,
+    'cache' => GraphQL\Cache\MemoryCache::class,
 
     'controllers' => [
         'App\\Controllers',
