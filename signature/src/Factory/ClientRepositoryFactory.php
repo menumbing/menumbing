@@ -18,7 +18,7 @@ class ClientRepositoryFactory
         $factory = $config->get('signature.client_repository_factory');
 
         if (is_string($factory)) {
-            $factory = $config->get($factory);
+            $factory = $container->get($factory);
         }
 
         return $factory($container);
