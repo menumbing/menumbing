@@ -16,7 +16,7 @@ class Hash implements CastsInboundAttributes
     #[Inject]
     protected HasInterface $hash;
 
-    public function __construct(protected readonly string $driver)
+    public function __construct(protected readonly string $driver = 'bcrypt')
     {
     }
 
