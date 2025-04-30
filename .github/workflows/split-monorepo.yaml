@@ -35,6 +35,8 @@ jobs:
             split_repository: 'graphql'
           - local_path: 'hashing'
             split_repository: 'hashing'
+          - local_path: 'oauth2-server'
+            split_repository: 'oauth2-server'
 
     steps:
       - uses: actions/checkout@v2
