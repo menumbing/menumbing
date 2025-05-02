@@ -26,6 +26,7 @@ use Menumbing\OAuth2\Server\Bridge\Repository\RefreshTokenRepository;
 use Menumbing\OAuth2\Server\Bridge\Repository\ScopeRepository;
 use Menumbing\OAuth2\Server\Bridge\Repository\UserRepository;
 use Menumbing\OAuth2\Server\Console\GenerateClientCommand;
+use Menumbing\OAuth2\Server\Contract\AuthorizeRequestInterface;
 use Menumbing\OAuth2\Server\Contract\TokenIssuerInterface;
 use Menumbing\OAuth2\Server\Factory\AuthorizationServerFactory;
 use Menumbing\OAuth2\Server\Factory\ResourceServerFactory;
@@ -49,6 +50,7 @@ class ConfigProvider
                 ScopeRepositoryInterface::class => ScopeRepository::class,
 
                 TokenIssuerInterface::class => TokenIssuer::class,
+                AuthorizeRequestInterface::class => AuthorizeRequest::class,
 
                 ResourceServer::class => ResourceServerFactory::class,
                 AuthorizationServer::class => AuthorizationServerFactory::class,
