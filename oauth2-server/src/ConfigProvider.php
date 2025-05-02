@@ -26,6 +26,7 @@ use Menumbing\OAuth2\Server\Bridge\Repository\RefreshTokenRepository;
 use Menumbing\OAuth2\Server\Bridge\Repository\ScopeRepository;
 use Menumbing\OAuth2\Server\Bridge\Repository\UserRepository;
 use Menumbing\OAuth2\Server\Console\GenerateClientCommand;
+use Menumbing\OAuth2\Server\Console\InstallCommand;
 use Menumbing\OAuth2\Server\Console\KeysCommand;
 use Menumbing\OAuth2\Server\Console\PurgeTokenCommand;
 use Menumbing\OAuth2\Server\Contract\AuthorizeRequestInterface;
@@ -64,6 +65,7 @@ class ConfigProvider
                 GenerateClientCommand::class,
                 PurgeTokenCommand::class,
                 KeysCommand::class,
+                InstallCommand::class,
             ],
             'publish' => [
                 [
