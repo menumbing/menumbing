@@ -6,7 +6,7 @@ namespace Menumbing\Hashing\Cast;
 
 use Hyperf\Contract\CastsInboundAttributes;
 use Hyperf\Di\Annotation\Inject;
-use Menumbing\Contract\Hashing\HasInterface;
+use HyperfExtension\Hashing\Contract\HashInterface;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -14,7 +14,7 @@ use Menumbing\Contract\Hashing\HasInterface;
 class Hash implements CastsInboundAttributes
 {
     #[Inject]
-    protected HasInterface $hash;
+    protected HashInterface $hash;
 
     public function __construct(protected readonly string $driver = 'bcrypt')
     {
