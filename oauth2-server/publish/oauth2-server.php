@@ -23,6 +23,12 @@ return [
     // Find a user with a specific key
     'user_find_by' => 'email',
 
+    // Define a cookie option for storing the access token.
+    'cookie' => [
+        'name' => 'oauth2_token',
+        'domain' => 'localhost',
+    ],
+
     // Access token lifetime (e.g., 1 hour)
     'access_token_expire_in' => new \DateInterval('PT1H'),
     // Refresh token lifetime (e.g., 1 month)
