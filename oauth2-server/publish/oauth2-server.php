@@ -42,7 +42,7 @@ return [
     'routes' => [
         'issue_token' => [
             'server' => 'http',
-            'path' => '/oauth/token',
+            'path' => '/oauth2/token',
             'handler' => [IssueTokenController::class, 'issueToken'],
             'options' => [
                 'middleware' => [],
@@ -50,7 +50,7 @@ return [
         ],
         'user_info' => [
             'server' => 'http',
-            'path' => '/oauth/me',
+            'path' => '/oauth2/me',
             'handler' => [GetUserInfoController::class, 'infoMe'],
             'options' => [
                 'middleware' => [],
@@ -59,7 +59,7 @@ return [
         ],
         'scope_list' => [
             'server' => 'http',
-            'path' => '/oauth/scopes',
+            'path' => '/oauth2/scopes',
             'handler' => [GetScopeListController::class, 'index'],
             'options' => [
                 'middleware' => [],
@@ -68,7 +68,7 @@ return [
         ],
         'token_validity' => [
             'server' => 'http',
-            'path' => '/oauth/tokens/{tokenId}/validity',
+            'path' => '/oauth2/tokens/{tokenId}/validity',
             'handler' => [GetAccessTokenInfoController::class, 'isRevoked'],
             'options' => [
                 'middleware' => [CheckClientCredentialsForAnyScope::class],
