@@ -109,12 +109,11 @@ class Client extends Model implements ClientModelInterface
     public function handlesGrant(?string $grantType): bool
     {
         return match ($grantType) {
-            'authorization_code' => !($this->isPersonalAccessClient() || $this->isPasswordClient()) && $this->isConfidential(),
-            'personal_access' => $this->isPersonalAccessClient() && $this->isConfidential(),
-            'password' => $this->isPasswordClient(),
-            'client_credentials' => !empty($this->getSecret()) && !$this->isPasswordClient(),
-            'implicit' => !$this->isConfidential(),
-            default => true,
+            'authorization_code', 'implicit' => $this->isConfidential() && !empty($this->getRedirect()),
+            'personal_access'                => $this->isPersonalAccessClient() && $this->isConfidential(),
+            'password'                       => $this->isPasswordClient(),
+            'client_credentials'             => $this->isConfidential() && $this->isFirstParty(),
+            default                          => false,
         };
     }
 
