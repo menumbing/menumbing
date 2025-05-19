@@ -69,7 +69,7 @@ class OAuth2ClientGuard implements GuardInterface
 
         $this->validateScopes($request);
 
-        if (null === $user = $this->retrieveClient($request->getAttribute('oauth_client_id'), $bearerToken)) {
+        if (null === $client = $this->provider->retrieveByToken($request->getAttribute('oauth_client_id'), $bearerToken)) {
             return null;
         }
 
@@ -77,7 +77,7 @@ class OAuth2ClientGuard implements GuardInterface
             return null;
         }
 
-        return $user;
+        return $client;
     }
 
     protected function getAccessTokenProvider(string $name): AccessTokenProviderInterface
