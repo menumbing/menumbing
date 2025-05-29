@@ -1,16 +1,16 @@
 {
-    "name": "menumbing/http-client",
+    "name": "menumbing/health-check",
     "type": "library",
     "license": "MIT",
     "keywords": [
         "php",
         "hyperf",
-        "pandawa"
+        "menumbing"
     ],
-    "description": "Http clients component for Hyperf",
+    "description": "Cloud native health check component for Hyperf",
     "autoload": {
         "psr-4": {
-            "Menumbing\\HttpClient\\": "src/"
+            "Menumbing\\HealthCheck\\": "src/"
         }
     },
     "autoload-dev": {
@@ -20,12 +20,9 @@
     },
     "require": {
         "php": ">=8.1",
-        "menumbing/contracts": "^1.0",
         "hyperf/di": "^3.1",
-        "hyperf/event": "^3.1",
-        "hyperf/framework": "^3.1",
-        "hyperf/guzzle": "^3.1",
-        "hyperf/server": "^3.1"
+        "hyperf/contract": "^3.1",
+        "menumbing/contracts": "^1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
@@ -35,9 +32,7 @@
         "swoole/ide-helper": "dev-master"
     },
     "suggest": {
-        "swow/swow": "Required to create swow components.",
-        "hyperf/database": "Required to check database.",
-        "hyperf/redis": "Required to check redis."
+        "swow/swow": "Required to create swow components."
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -52,7 +47,7 @@
     },
     "extra": {
         "hyperf": {
-            "config": "Menumbing\\HttpClient\\ConfigProvider"
+            "config": "Menumbing\\HealthCheck\\ConfigProvider"
         },
         "branch-alias": {
             "dev-master": "1.x-dev"
