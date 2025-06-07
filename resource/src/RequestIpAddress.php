@@ -43,7 +43,7 @@ class RequestIpAddress implements RequestIpAddressInterface
 
     public function getClientIp(): ?string
     {
-        return $this->getClientIps()[0];
+        return $this->getClientIps()[0] ?? null;
     }
 
     public function getClientIps(): array
