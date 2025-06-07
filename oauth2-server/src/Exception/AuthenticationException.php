@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Menumbing\OAuth2\Server\Exception;
 
 use League\OAuth2\Server\Exception\OAuthServerException;
-use Menumbing\Contract\Exception\HasHttpResponseInterface;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-class AuthenticationException extends OAuthServerException implements HasHttpResponseInterface
+class AuthenticationException extends OAuthServerException
 {
     public static function missingScope(array $scopes): static
     {
