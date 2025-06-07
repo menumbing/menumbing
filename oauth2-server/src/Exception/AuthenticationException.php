@@ -14,22 +14,22 @@ class AuthenticationException extends OAuthServerException
     public static function missingScope(array $scopes): static
     {
         return new static(
-            message       : sprintf('Missing scope `%s` provided.', implode(', ', $scopes)),
-            code          : 30,
-            errorType     : 'invalid_scope',
+            message: sprintf('Missing scope `%s` provided.', implode(', ', $scopes)),
+            code: 30,
+            errorType: 'invalid_scope',
             httpStatusCode: 403,
-            hint          : 'Make sure your access token request includes the "scope" parameter with the required scopes.',
+            hint: 'Make sure your access token request includes the "scope" parameter with the required scopes.',
         );
     }
 
     public static function forbiddenToUseScope(string $scope): static
     {
         return new static(
-            message       : sprintf('This client is forbidden to use scope `%s`.', $scope),
-            code          : 31,
-            errorType     : 'invalid_scope',
+            message: sprintf('This client is forbidden to use scope `%s`.', $scope),
+            code: 31,
+            errorType: 'invalid_scope',
             httpStatusCode: 403,
-            hint          : 'Make sure your are allowed to use this scope.',
+            hint: 'Make sure your are allowed to use this scope.',
         );
     }
 }
