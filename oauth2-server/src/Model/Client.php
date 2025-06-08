@@ -20,7 +20,7 @@ use function Hyperf\Config\config;
  */
 class Client extends Model implements ClientModelInterface, CacheableInterface
 {
-    use HasUuids, Cacheable;
+    use HasUuids,Cacheable;
 
     protected null|string $table = 'oauth_clients';
 
@@ -85,7 +85,7 @@ class Client extends Model implements ClientModelInterface, CacheableInterface
 
     public function isFirstParty(): bool
     {
-        return $this->getAttribute('personal_access_client') || $this->getAttribute('password_client');
+        return empty($this->getAttribute('user_id'));
     }
 
     public function shouldSkipAuthorization(): bool
@@ -111,7 +111,7 @@ class Client extends Model implements ClientModelInterface, CacheableInterface
     public function handlesGrant(?string $grantType): bool
     {
         return match ($grantType) {
-            'authorization_code', 'implicit' => $this->isConfidential() && !empty($this->getRedirect()),
+            'authorization_code', 'implicit' => !empty($this->getRedirect()),
             'personal_access'                => $this->isPersonalAccessClient() && $this->isConfidential(),
             'password'                       => $this->isPasswordClient(),
             'client_credentials'             => $this->isConfidential() && $this->isFirstParty(),
