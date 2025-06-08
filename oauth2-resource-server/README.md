@@ -83,7 +83,7 @@ tokens. The following are the configurations for the guards.
 
 ## Provider
 
-This package 3 data providers to retrieve User/Client data using the access token
+This package has 3 data providers to retrieve User/Client data using the access token
 received from incoming request. The following are the available providers:
 
 - `API`: User/Client data is retrieved by requesting API to OAuth Server.
