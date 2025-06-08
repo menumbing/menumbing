@@ -6,6 +6,7 @@ namespace Menumbing\OAuth2\ResourceServer\Factory;
 
 use Hyperf\Contract\ConfigInterface;
 use Menumbing\OAuth2\ResourceServer\Bridge\Repository\AccessTokenRepository;
+use Menumbing\OAuth2\ResourceServer\Provider\AccessToken\AccessTokenProviderResolverTrait;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -13,6 +14,8 @@ use Psr\Container\ContainerInterface;
  */
 class AccessTokenRepositoryFactory
 {
+    use AccessTokenProviderResolverTrait;
+
     protected ConfigInterface $config;
 
     public function __construct(protected ContainerInterface $container)
@@ -22,12 +25,8 @@ class AccessTokenRepositoryFactory
 
     public function __invoke()
     {
-        $providerName = $this->config->get('oauth2-resource-server.access_token.provider');
+        $providerName = $this->config->get('oauth2-resource-server.access_token.repository_provider');
 
-        return new AccessTokenRepository(
-            $this->container->get(
-                $this->config->get('oauth2-resource-server.access_token.providers.' . $providerName)
-            )
-        );
+        return new AccessTokenRepository($this->resolveAccessTokenProvider($providerName));
     }
 }

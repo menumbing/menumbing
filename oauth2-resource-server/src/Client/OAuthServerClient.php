@@ -32,6 +32,21 @@ class OAuthServerClient
         return $this->decodeResponse($response);
     }
 
+    public function clientDetail(string $clientId, string $token): array
+    {
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('/oauth2/clients/%s', $clientId),
+            [
+                RequestOptions::HEADERS => [
+                    'Authorization' => 'Bearer ' . $token,
+                ],
+            ]
+        );
+
+        return $this->decodeResponse($response);
+    }
+
     public function tokenValidity(string $tokenId): array
     {
         $response = $this->httpClient->request(

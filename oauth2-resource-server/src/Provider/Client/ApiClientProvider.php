@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\ResourceServer\Provider\User;
+namespace Menumbing\OAuth2\ResourceServer\Provider\Client;
 
 use BadMethodCallException;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
-use HyperfExtension\Auth\Contracts\UserProviderInterface;
 use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
-use Menumbing\OAuth2\ResourceServer\Contract\User;
+use Menumbing\OAuth2\ResourceServer\Contract\Client;
+use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class ApiUserProvider implements UserProviderInterface
+class ApiClientProvider implements ClientProviderInterface
 {
     public function __construct(protected OAuthServerClient $client, array $options)
     {
@@ -26,8 +26,8 @@ class ApiUserProvider implements UserProviderInterface
 
     public function retrieveByToken($identifier, string $token): ?AuthenticatableInterface
     {
-        return new User(
-            $this->client->userInfo($token)
+        return new Client(
+            $this->client->clientDetail($identifier, $token)
         );
     }
 

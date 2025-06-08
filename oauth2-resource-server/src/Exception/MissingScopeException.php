@@ -14,7 +14,7 @@ class MissingScopeException extends AuthorizationException
 {
     public readonly array $scopes;
 
-    public function __construct($scopes = [], $message = 'Invalid scope(s) provided.', $code = 403)
+    public function __construct($scopes = [], $message = 'Token has invalid/missing scope(s).', $code = 403)
     {
         parent::__construct($message, $code);
 

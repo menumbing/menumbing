@@ -4,35 +4,26 @@ declare(strict_types=1);
 
 namespace Menumbing\OAuth2\ResourceServer\Contract;
 
-use HyperfExtension\Auth\Authenticatable;
-use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
+use Hyperf\Contract\Arrayable;
+use HyperfExtension\Auth\GenericUser;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class User implements AuthenticatableInterface
+class User extends GenericUser implements Arrayable
 {
-    use Authenticatable;
-
-    public function __construct(
-        protected string $id,
-        protected string $name,
-    )
-    {
-    }
-
     public function getIdentifier(): string
     {
-        return $this->id;
+        return $this->attributes['id'];
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
-        return $this->name;
+        return $this->attributes['name'] ?? null;
     }
 
-    public function getKeyName(): string
+    public function toArray(): array
     {
-        return 'id';
+        return $this->attributes;
     }
 }

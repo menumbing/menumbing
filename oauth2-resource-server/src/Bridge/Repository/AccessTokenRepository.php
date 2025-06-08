@@ -8,7 +8,6 @@ use BadMethodCallException;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
-use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
 use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
 
 /**

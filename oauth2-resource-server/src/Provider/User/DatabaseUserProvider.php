@@ -5,18 +5,26 @@ declare(strict_types=1);
 namespace Menumbing\OAuth2\ResourceServer\Provider\User;
 
 use BadMethodCallException;
+use Hyperf\Database\ConnectionInterface;
+use Hyperf\Database\ConnectionResolverInterface;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use HyperfExtension\Auth\Contracts\UserProviderInterface;
-use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
+use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\OAuth2\ResourceServer\Contract\User;
+use function Hyperf\Config\config;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class ApiUserProvider implements UserProviderInterface
+class DatabaseUserProvider implements UserProviderInterface
 {
-    public function __construct(protected OAuthServerClient $client, array $options)
+    protected ConnectionInterface $connection;
+
+    public function __construct(ConnectionResolverInterface $connectionResolver, array $options)
     {
+        $connection = $options['connection'] ?? config('database.default');
+
+        $this->connection = $connectionResolver->connection($connection);
     }
 
     public function retrieveById($identifier): ?AuthenticatableInterface
@@ -26,9 +34,13 @@ class ApiUserProvider implements UserProviderInterface
 
     public function retrieveByToken($identifier, string $token): ?AuthenticatableInterface
     {
-        return new User(
-            $this->client->userInfo($token)
-        );
+        $userData = $this->connection->table('users')->find($identifier);
+
+        if (null === $userData) {
+            throw new AuthorizationException('User not found or no longer active.', 401);
+        }
+
+        return new User((array) $userData);
     }
 
     public function updateRememberToken(AuthenticatableInterface $user, string $token): void

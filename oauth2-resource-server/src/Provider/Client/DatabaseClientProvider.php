@@ -5,15 +5,28 @@ declare(strict_types=1);
 namespace Menumbing\OAuth2\ResourceServer\Provider\Client;
 
 use BadMethodCallException;
+use Hyperf\Database\ConnectionInterface;
+use Hyperf\Database\ConnectionResolverInterface;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
+use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\OAuth2\ResourceServer\Contract\Client;
 use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
+use function Hyperf\Config\config;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class StatelessClientProvider implements ClientProviderInterface
+class DatabaseClientProvider implements ClientProviderInterface
 {
+    protected ConnectionInterface $connection;
+
+    public function __construct(ConnectionResolverInterface $connectionResolver, array $options)
+    {
+        $connection = $options['connection'] ?? config('database.default');
+
+        $this->connection = $connectionResolver->connection($connection);
+    }
+
     public function retrieveById($identifier): ?AuthenticatableInterface
     {
         throw new BadMethodCallException();
@@ -21,7 +34,13 @@ class StatelessClientProvider implements ClientProviderInterface
 
     public function retrieveByToken($identifier, string $token): ?AuthenticatableInterface
     {
-        return new Client(['id' => $identifier]);
+        $userData = $this->connection->table('oauth_clients')->find($identifier);
+
+        if (null === $userData) {
+            throw new AuthorizationException('Client not found or no longer active.', 401);
+        }
+
+        return new Client((array)$userData);
     }
 
     public function updateRememberToken(AuthenticatableInterface $user, string $token): void

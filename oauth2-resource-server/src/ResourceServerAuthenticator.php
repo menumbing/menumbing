@@ -38,7 +38,7 @@ class ResourceServerAuthenticator
         } catch (OAuthServerException $e) {
             throw $e;
         } catch (Exception $e) {
-            throw new AuthenticationException(sprintf('Unauthorized: %s', $e->getMessage()));
+            throw new AuthenticationException(sprintf('Unauthorized: %s', $e->getMessage()), $e->getCode());
         }
     }
 }
