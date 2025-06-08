@@ -1,6 +1,6 @@
 <?php
 
-use Menumbing\OAuth2\Resource\Provider;
+use Menumbing\OAuth2\ResourceServer\Provider;
 use function Hyperf\Support\env;
 
 return [

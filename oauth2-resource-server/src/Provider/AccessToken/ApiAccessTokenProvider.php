@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Provider\AccessToken;
+namespace Menumbing\OAuth2\ResourceServer\Provider\AccessToken;
 
-use Menumbing\OAuth2\Resource\Client\OAuthServerClient;
-use Menumbing\OAuth2\Resource\Contract\AccessToken;
-use Menumbing\OAuth2\Resource\Contract\AccessTokenProviderInterface;
-use Menumbing\OAuth2\Resource\Contract\OAuthAccessTokenInterface;
+use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
+use Menumbing\OAuth2\ResourceServer\Contract\AccessToken;
+use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\OAuthAccessTokenInterface;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>

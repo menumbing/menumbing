@@ -9,7 +9,7 @@
     "description": "OAuth2 Resource Server component for Hyperf",
     "autoload": {
         "psr-4": {
-            "Menumbing\\OAuth2\\Resource\\": "src/"
+            "Menumbing\\OAuth2\\ResourceServer\\": "src/"
         }
     },
     "autoload-dev": {
@@ -48,7 +48,7 @@
     },
     "extra": {
         "hyperf": {
-            "config": "Menumbing\\OAuth2\\Resource\\ConfigProvider"
+            "config": "Menumbing\\OAuth2\\ResourceServer\\ConfigProvider"
         }
     }
 }

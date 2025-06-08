@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Guard;
+namespace Menumbing\OAuth2\ResourceServer\Guard;
 
 use BadMethodCallException;
 use Hyperf\Contract\ConfigInterface;
@@ -10,13 +10,13 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use HyperfExtension\Auth\Contracts\UserProviderInterface;
 use HyperfExtension\Auth\GuardHelpers;
-use Menumbing\OAuth2\Resource\Contract\AccessTokenProviderInterface;
-use Menumbing\OAuth2\Resource\Contract\ClientProviderInterface;
-use Menumbing\OAuth2\Resource\Contract\OAuth2GuardInterface;
-use Menumbing\OAuth2\Resource\OAuth2GuardHelpers;
-use Menumbing\OAuth2\Resource\ResourceServerAuthenticator;
-use Menumbing\OAuth2\Resource\Util\RequestExtractor;
-use Menumbing\OAuth2\Resource\ValidatesScopes;
+use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\OAuth2GuardInterface;
+use Menumbing\OAuth2\ResourceServer\OAuth2GuardHelpers;
+use Menumbing\OAuth2\ResourceServer\ResourceServerAuthenticator;
+use Menumbing\OAuth2\ResourceServer\Util\RequestExtractor;
+use Menumbing\OAuth2\ResourceServer\ValidatesScopes;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Client;
+namespace Menumbing\OAuth2\ResourceServer\Client;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;

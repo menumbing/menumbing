@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Util;
+namespace Menumbing\OAuth2\ResourceServer\Util;
 
 use Hyperf\Stringable\Str;
 use Psr\Http\Message\ServerRequestInterface;

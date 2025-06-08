@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource;
+namespace Menumbing\OAuth2\ResourceServer;
 
-use Menumbing\OAuth2\Resource\Contract\AccessTokenProviderInterface;
-use Menumbing\OAuth2\Resource\Contract\ClientProviderInterface;
-use Menumbing\OAuth2\Resource\Contract\OAuth2GuardInterface;
-use Menumbing\OAuth2\Resource\Contract\OAuthAccessTokenInterface;
-use Menumbing\OAuth2\Resource\Contract\OAuthClientInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\OAuth2GuardInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\OAuthAccessTokenInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\OAuthClientInterface;
 
 /**
  * @mixin OAuth2GuardInterface

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Provider\Client;
+namespace Menumbing\OAuth2\ResourceServer\Provider\Client;
 
 use BadMethodCallException;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
-use Menumbing\OAuth2\Resource\Contract\Client;
-use Menumbing\OAuth2\Resource\Contract\ClientProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\Client;
+use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>

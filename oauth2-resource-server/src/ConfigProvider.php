@@ -10,14 +10,14 @@ declare(strict_types=1);
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
 
-namespace Menumbing\OAuth2\Resource;
+namespace Menumbing\OAuth2\ResourceServer;
 
 use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
 use League\OAuth2\Server\ResourceServer;
-use Menumbing\OAuth2\Resource\Client\OAuthServerClient;
-use Menumbing\OAuth2\Resource\Factory\AccessTokenRepositoryFactory;
-use Menumbing\OAuth2\Resource\Factory\OAuthServerClientFactory;
-use Menumbing\OAuth2\Resource\Factory\ResourceServerFactory;
+use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
+use Menumbing\OAuth2\ResourceServer\Factory\AccessTokenRepositoryFactory;
+use Menumbing\OAuth2\ResourceServer\Factory\OAuthServerClientFactory;
+use Menumbing\OAuth2\ResourceServer\Factory\ResourceServerFactory;
 
 class ConfigProvider
 {

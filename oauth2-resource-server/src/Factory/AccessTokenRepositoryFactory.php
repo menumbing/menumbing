@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Factory;
+namespace Menumbing\OAuth2\ResourceServer\Factory;
 
 use Hyperf\Contract\ConfigInterface;
-use Menumbing\OAuth2\Resource\Bridge\Repository\AccessTokenRepository;
+use Menumbing\OAuth2\ResourceServer\Bridge\Repository\AccessTokenRepository;
 use Psr\Container\ContainerInterface;
 
 /**

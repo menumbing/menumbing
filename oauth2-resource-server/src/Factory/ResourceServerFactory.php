@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Factory;
+namespace Menumbing\OAuth2\ResourceServer\Factory;
 
 use Hyperf\Contract\ConfigInterface;
 use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
 use League\OAuth2\Server\ResourceServer;
-use Menumbing\OAuth2\Resource\MakeCryptKey;
+use Menumbing\OAuth2\ResourceServer\MakeCryptKey;
 use Psr\Container\ContainerInterface;
 
 /**

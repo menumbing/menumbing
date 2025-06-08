@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Exception;
+namespace Menumbing\OAuth2\ResourceServer\Exception;
 
 use Hyperf\Collection\Arr;
 use HyperfExtension\Auth\Exceptions\AuthorizationException;

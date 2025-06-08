@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource;
+namespace Menumbing\OAuth2\ResourceServer;
 
 use League\OAuth2\Server\CryptKey;
 

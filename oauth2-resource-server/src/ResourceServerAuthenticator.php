@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource;
+namespace Menumbing\OAuth2\ResourceServer;
 
 use Exception;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
-use Menumbing\OAuth2\Resource\Exception\AuthenticationException;
+use Menumbing\OAuth2\ResourceServer\Exception\AuthenticationException;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**

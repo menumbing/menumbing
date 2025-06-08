@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\Resource\Contract;
+namespace Menumbing\OAuth2\ResourceServer\Contract;
 
 use HyperfExtension\Auth\Authenticatable;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
