@@ -39,6 +39,8 @@ jobs:
             split_repository: 'oauth2-server'
           - local_path: 'health-check'
             split_repository: 'health-check'
+          - local_path: 'serializer'
+            split_repository: 'serializer'
 
     steps:
       - uses: actions/checkout@v2
