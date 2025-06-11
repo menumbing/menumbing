@@ -10,4 +10,5 @@ namespace Menumbing\EventStream\Enum;
 enum Result
 {
     case ACK;
+    case NACK;
 }

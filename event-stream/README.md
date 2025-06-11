@@ -54,6 +54,7 @@ return [
     'consumer' => [
         'processes' => [], // Array of process configurations for different streams
         'block_for' => 1, // The number of seconds to sleep between processing batches
+        'retry_after' => 60, // The number of seconds to retry zombie message due to offline consumer or failed process
     ],
 
     // Serialization configuration for messages
@@ -141,7 +142,7 @@ namespace App\Event;
 
 use Menumbing\EventStream\Annotation\ConsumedEvent;
 
-#[ConsumedEvent(stream: 'user-events', name: 'user.created', driver: 'default')]
+#[ConsumedEvent(stream: 'user-events', name: 'user.created', driver: 'default', retries: 0)]
 class ConsumeUserCreated
 {
     public function __construct(
@@ -152,7 +153,7 @@ class ConsumeUserCreated
     }
 }
 ```
-It will automatically create a consumer process for each stream. Alternatively, you can configure consumers in the `event_stream.php` configuration file:
+It will automatically create a consumer process for each stream. The option `retries` indicate how many attempt should consumer process the message until it fire `ConsumeFailed` event. Alternatively, you can configure consumers in the `event_stream.php` configuration file:
 
 ```php
 'consumer' => [
@@ -160,6 +161,7 @@ It will automatically create a consumer process for each stream. Alternatively, 
         'user-events' => 2, // This will create 2 processes for 'user-events' stream
     ],
     'block_for' => 1, // The number of seconds to sleep between processing batches of messages.
+    'retry_after' => 30, // The number of seconds to retry zombie message due to offline consumer or failed process.
 ],
 ```
 

@@ -42,15 +42,19 @@ return [
      *
      * Options:
      * - processes: Array of process configurations for different streams.
-     *   Each key represents a stream identifier with the value being the number of processes.
-     *   Example: ['stream1' => 2] will create 2 processes for 'stream1'
+     * Each key represents a stream identifier with the value being the number of processes.
+     * Example: ['stream1' => 2] will create 2 processes for 'stream1'
      *
      * - block_for: The number of seconds to sleep between processing batches of messages.
-     *   This helps control the consumption rate and system resources.
+     * This helps control the consumption rate and system resources.
+     *
+     * - retry_after: Time in seconds after which pending messages are considered
+     *               for reprocessing if not acknowledged
      */
     'consumer' => [
         'processes' => [],
         'block_for' => 1,
+        'retry_after' => 60,
     ],
 
     /**

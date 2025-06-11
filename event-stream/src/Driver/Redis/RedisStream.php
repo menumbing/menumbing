@@ -78,10 +78,29 @@ class RedisStream implements StreamInterface
 
         foreach ($entries as $stream => $messages) {
             foreach ($messages as $id => $message) {
-                $streamMessage = $this->serializer->deserialize($message['message'], StreamMessage::class, $this->options['deserialize_format'] ?? 'json');
-                $streamMessage = $streamMessage->withId($id);
+                yield $stream => $this->deserialize($id, $message);
+            }
+        }
+    }
 
-                yield $stream => $streamMessage;
+    public function getIdleMessages(string $consumer, string $group, array $streams, int $retryAfter): Generator
+    {
+        foreach ($streams as $stream) {
+            $pending = $this->redis->xpending($stream, $group, '-', '+', 1);
+
+            foreach ($pending as $entry) {
+                [$id, $owner, $idle, $retryCount] = array_values($entry);
+
+                if ($idle >= $retryAfter) {
+                    $claimed = $this->redis->xclaim($stream, $group, $consumer, $retryAfter, [$id], ['JUSTID' => false]);
+
+                    foreach ($claimed as $id => $message) {
+                        $streamMessage = $this->deserialize($id, $message, $retryCount);
+                        $streamMessage = $streamMessage->withContext(['owner' => $owner]);
+
+                        yield $stream => $streamMessage;
+                    }
+                }
             }
         }
     }
@@ -98,5 +117,13 @@ class RedisStream implements StreamInterface
         }
 
         return in_array($name, array_column($groups, 'name'), true);
+    }
+
+    protected function deserialize(string $id, array $message, int $retryCount = 0): StreamMessage
+    {
+        $streamMessage = $this->serializer->deserialize($message['message'], StreamMessage::class, $this->options['deserialize_format'] ?? 'json');
+        $streamMessage = $streamMessage->withContext(['retry_count' => $retryCount]);
+
+        return $streamMessage->withId($id);
     }
 }

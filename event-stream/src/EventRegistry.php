@@ -30,11 +30,14 @@ class EventRegistry
                 throw new EventNameConflictedException($name);
             }
 
-            $this->events[$name] = $class;
+            $this->events[$name] = [
+                'class' => $class,
+                'retries' => $annotation->retries,
+            ];
         }
     }
 
-    public function getClassByName(string $name): string
+    public function getClassByName(string $name): array
     {
         if (!$this->has($name)) {
             throw new EventNotFoundException(sprintf('Event "%s" not found.', $name));

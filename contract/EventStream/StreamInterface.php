@@ -42,6 +42,18 @@ interface StreamInterface
     public function subscribe(string $consumer, string $group, array $streams): Generator;
 
     /**
+     * Retrieves messages that have been idle for a specified duration within particular streams of a consumer group.
+     *
+     * @param  string  $consumer  The name of the consumer requesting the idle messages.
+     * @param  string  $group  The name of the consumer group.
+     * @param  array  $streams  An array of stream names to fetch idle messages from.
+     * @param  int  $retryAfter  The idle time in milliseconds after which messages are considered for retrieval.
+     *
+     * @return Generator<StreamMessage> Yields messages that meet the idle time criteria.
+     */
+    public function getIdleMessages(string $consumer, string $group, array $streams, int $retryAfter): Generator;
+
+    /**
      * Acknowledges one or more messages in the given stream and group.
      *
      * @param  string  $group  The name of the consumer group.
