@@ -24,10 +24,22 @@ class ConsumerEventHandler
 
     public function __invoke(string $groupName, StreamMessage $message): Result
     {
-        $this->event->dispatch(
-            $this->serializer->denormalize($message->data, $this->eventRegistry->getClassByName($message->type))
-        );
+        $metadata = $this->eventRegistry->getClassByName($message->type);
 
-        return Result::ACK;
+        try {
+            $this->event->dispatch(
+                $this->serializer->denormalize($message->data, $metadata['class'])
+            );
+
+            return Result::ACK;
+        } catch (\Throwable $e) {
+            $retryCount = $message->context['retry_count'] ?? 0;
+
+            if ($retryCount >= $metadata['retries']) {
+                throw $e;
+            }
+
+            return Result::NACK;
+        }
     }
 }

@@ -25,6 +25,6 @@ class StreamMessage
 
     public function withContext(array $context): static
     {
-        return new static($this->stream, $this->type, $this->data, [...$this->context, ...$context]);
+        return new static($this->stream, $this->type, $this->data, [...$this->context, ...$context], $this->id);
     }
 }

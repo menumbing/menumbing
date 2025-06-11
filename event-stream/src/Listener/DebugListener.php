@@ -81,9 +81,10 @@ final class DebugListener implements ListenerInterface
     {
         if ($event instanceof ConsumeEvent) {
             $this->logger->debug(
-                message: '[{timestamp}] Event Stream {type} event {message_id} from stream {stream_name} on group {group_name} with driver {driver_name}',
+                message: '[{timestamp}] Event Stream attempt {attempt} {type} event {message_id} from stream {stream_name} on group {group_name} with driver {driver_name}',
                 context: [
                     'timestamp' => date('Y-m-d H:i:s'),
+                    'attempt' => $event->message->context['retry_count'] ?? 0,
                     'type' => $type,
                     'message_id' => $event->message->id,
                     'stream_name' => $event->message->stream,
