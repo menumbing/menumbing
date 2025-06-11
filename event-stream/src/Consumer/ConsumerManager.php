@@ -77,6 +77,8 @@ class ConsumerManager
                 continue;
             }
 
+            $streams[$key] = true;
+
             yield $key => [
                 'name'   => $annotation->stream,
                 'driver' => $annotation->driver,
