@@ -31,7 +31,7 @@ final class RegisterRoutesListener implements ListenerInterface
 
     public function process(object $event): void
     {
-        $paths = $this->config->get('health-check.route.paths', []);
+        $paths = $this->config->get('health_check.route.paths', []);
 
         if (null !== $paths['liveness'] ?? null) {
             $this->getRouter()->addRoute('GET', $paths['liveness'], [HealthCheckController::class, 'liveness']);
@@ -45,7 +45,7 @@ final class RegisterRoutesListener implements ListenerInterface
     private function getRouter(): RouteCollector
     {
         return $this->dispatcherFactory->getRouter(
-            $this->config->get('health-check.route.server', 'http')
+            $this->config->get('health_check.route.server', 'http')
         );
     }
 }

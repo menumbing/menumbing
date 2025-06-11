@@ -27,7 +27,7 @@ class HealthCheckController
 
     public function liveness(): PsrResponseInterface
     {
-        $results = $this->checkManager->checkAll($this->config->get('health-check.checks.liveness', []));
+        $results = $this->checkManager->checkAll($this->config->get('health_check.checks.liveness', []));
 
         $results['status'] = 'ready' === $results['status'] ? 'alive' : 'dead';
         $statusCode = $results['status'] === 'alive' ? 200 : 503;
@@ -37,7 +37,7 @@ class HealthCheckController
 
     public function readiness(): PsrResponseInterface
     {
-        $results = $this->checkManager->checkAll($this->config->get('health-check.checks.readiness', []));
+        $results = $this->checkManager->checkAll($this->config->get('health_check.checks.readiness', []));
 
         $statusCode = $results['status'] === 'ready' ? 200 : 503;
 

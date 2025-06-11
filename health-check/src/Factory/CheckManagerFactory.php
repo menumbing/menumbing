@@ -24,7 +24,7 @@ class CheckManagerFactory
         return new CheckManager(
             array_map(
                 fn(string $checker) => make($checker),
-                $this->config->get('health-check.checkers', [])
+                $this->config->get('health_check.checkers', [])
             )
         );
     }

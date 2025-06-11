@@ -32,8 +32,8 @@ class ConfigProvider
                 [
                     'id' => 'config',
                     'description' => 'The config for health-check.',
-                    'source' => __DIR__ . '/../publish/health-check.php',
-                    'destination' => BASE_PATH . '/config/autoload/health-check.php',
+                    'source' => __DIR__ . '/../publish/health_check.php',
+                    'destination' => BASE_PATH . '/config/autoload/health_check.php',
                 ],
             ],
             'annotations' => [
