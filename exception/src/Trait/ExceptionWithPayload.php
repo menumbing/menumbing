@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\Resource\Trait;
+namespace Menumbing\Exception\Trait;
 
 use Psr\Http\Message\ResponseInterface;
 
