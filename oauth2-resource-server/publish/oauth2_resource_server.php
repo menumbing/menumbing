@@ -10,6 +10,11 @@ return [
     // Menumbing http client used to communicate with oauth server
     'oauth_server_http_client' => 'oauth2',
 
+    // Location where token might be placed in request if set by OAuth2 Server
+    'cookie' => [
+        'name' => 'oauth2_token',
+    ],
+
     'client' => [
         // List client provider(s)
         'providers' => [

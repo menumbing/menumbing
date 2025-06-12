@@ -57,7 +57,7 @@ abstract class AbstractOAuth2Guard implements GuardInterface
 
         if (RequestExtractor::bearerToken($this->request)) {
             $user = $this->authenticateWithBearerToken($this->request);
-        } else if ($token = $this->request->cookie($this->config->get('oauth2-server.cookie.name', 'oauth2_token'))) {
+        } else if ($token = $this->request->cookie($this->config->get('oauth2_resource_server.cookie.name', 'oauth2_token'))) {
             $request = $this->request->withHeader('Authorization', 'Bearer ' . $token);
             $user = $this->authenticateWithBearerToken($request);;
         }
