@@ -25,7 +25,7 @@ class AccessTokenRepositoryFactory
 
     public function __invoke()
     {
-        $providerName = $this->config->get('oauth2-resource-server.access_token.repository_provider');
+        $providerName = $this->config->get('oauth2_resource_server.access_token.repository_provider');
 
         return new AccessTokenRepository($this->resolveAccessTokenProvider($providerName));
     }

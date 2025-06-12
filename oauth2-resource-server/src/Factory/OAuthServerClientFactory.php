@@ -24,7 +24,7 @@ class OAuthServerClientFactory
     {
         return new OAuthServerClient(
             $this->container->get(
-                $this->config->get('oauth2-resource-server.oauth_server_http_client')
+                $this->config->get('oauth2_resource_server.oauth_server_http_client')
             )
         );
     }

@@ -67,7 +67,7 @@ abstract class AbstractOAuth2Guard implements GuardInterface
 
     protected function resolveClientProvider(string $name): ClientProviderInterface
     {
-        $config = $this->config->get('oauth2-resource-server.client.providers.' . $name);
+        $config = $this->config->get('oauth2_resource_server.client.providers.' . $name);
 
         if (is_null($config)) {
             throw new InvalidArgumentException(

@@ -18,7 +18,7 @@ trait AccessTokenProviderResolverTrait
 {
     protected function resolveAccessTokenProvider(string $name): AccessTokenProviderInterface
     {
-        $config = $this->config->get('oauth2-resource-server.access_token.providers.' . $name);
+        $config = $this->config->get('oauth2_resource_server.access_token.providers.' . $name);
 
         if (is_null($config)) {
             throw new InvalidArgumentException(

@@ -35,8 +35,8 @@ class ConfigProvider
                 [
                     'id'          => 'config',
                     'description' => 'The config for oauth2-resource-server.',
-                    'source'      => __DIR__ . '/../publish/oauth2-resource-server.php',
-                    'destination' => BASE_PATH . '/config/autoload/oauth2-resource-server.php',
+                    'source'      => __DIR__ . '/../publish/oauth2_resource_server.php',
+                    'destination' => BASE_PATH . '/config/autoload/oauth2_resource_server.php',
                 ],
             ],
             'annotations'  => [
