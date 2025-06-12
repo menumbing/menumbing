@@ -11,7 +11,8 @@
             "Menumbing\\Resource\\": "resource/src",
             "Menumbing\\Signature\\": "signature/src",
             "Menumbing\\Tracer\\": "tracer/src",
-            "Menumbing\\GraphQL\\": "graphql/src"
+            "Menumbing\\GraphQL\\": "graphql/src",
+            "Menumbing\\OAuth2\\ResourceServer\\": "oauth2-resource-server/src"
         }
     },
     "authors": [
