@@ -22,7 +22,7 @@ class DatabaseClientProvider implements ClientProviderInterface
 
     public function __construct(ConnectionResolverInterface $connectionResolver, array $options)
     {
-        $connection = $options['connection'] ?? config('database.default');
+        $connection = $options['connection'] ?? 'default';
 
         $this->connection = $connectionResolver->connection($connection);
     }
