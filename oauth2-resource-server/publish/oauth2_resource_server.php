@@ -7,9 +7,6 @@ return [
     // Public key path or content for token verification
     'public_key' => env('OAUTH2_PUBLIC_KEY'),
 
-    // Menumbing http client used to communicate with oauth server
-    'oauth_server_http_client' => 'oauth2',
-
     // Location where token might be placed in request if set by OAuth2 Server
     'cookie' => [
         'name' => 'oauth2_token',
@@ -24,6 +21,9 @@ return [
 
             'api' => [
                 'driver' => Provider\Client\ApiClientProvider::class,
+                'options' => [
+                    'http_client' => 'oauth2',
+                ],
             ],
 
             'database' => [
@@ -37,7 +37,7 @@ return [
 
     'access_token' => [
         // Configure League OAuth2 Access Token Repository Provider
-        'repository_provider' => 'stateless',
+        'default' => 'stateless',
 
         // List access token provider(s)
         'providers' => [
@@ -47,6 +47,9 @@ return [
 
             'api' => [
                 'driver' => Provider\AccessToken\ApiAccessTokenProvider::class,
+                'options' => [
+                    'http_client' => 'oauth2',
+                ],
             ],
         ],
     ],

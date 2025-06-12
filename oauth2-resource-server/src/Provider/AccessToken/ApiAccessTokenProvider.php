@@ -8,14 +8,23 @@ use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
 use Menumbing\OAuth2\ResourceServer\Contract\AccessToken;
 use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
 use Menumbing\OAuth2\ResourceServer\Contract\OAuthAccessTokenInterface;
+use Psr\Container\ContainerInterface;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
 class ApiAccessTokenProvider implements AccessTokenProviderInterface
 {
-    public function __construct(protected OAuthServerClient $client)
+    protected OAuthServerClient $client;
+
+    public function __construct(
+        ContainerInterface $container,
+        array              $options,
+    )
     {
+        $this->client = new OAuthServerClient(
+            $container->get($options['http_client'] ?? 'oauth2')
+        );
     }
 
     public function retrieveByToken(string $tokenId, string $token): ?OAuthAccessTokenInterface

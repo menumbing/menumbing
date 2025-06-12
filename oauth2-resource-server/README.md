@@ -13,13 +13,14 @@ using the OAuth2 Resource Server specification.
 - [Installation](#installation)
 - [Configuration](#configuration)
   - [Public Key](#public-key)
-- [Authentication Guard Setup](#authentication-guard)
-  - [User Guard](#user-guard)
-  - [Client Guard](#client-guard)
-- [Provider](#provider)
-  - [API Provider](#api-provider)
-  - [Database Provider](#database-provider)
-  - [Stateless Provider](#stateless-provider)
+- [Usage](#usage)
+  - [Authentication Guard Setup](#authentication-guard)
+    - [User Guard](#user-guard)
+    - [Client Guard](#client-guard)
+  - [Provider](#provider)
+    - [API Provider](#api-provider)
+    - [Database Provider](#database-provider)
+    - [Stateless Provider](#stateless-provider)
 
 ## Requirements
 
@@ -49,15 +50,17 @@ the public key **file path** or **content**.
 OAUTH2_PUBLIC_KEY=...
 ```
 
-## Authentication Guard
+## Usage
+
+### Authentication Guard
 
 `menumbing/oauth2-resource-server` uses the [menumbing/auth](https://github.com/menumbing/auth) package 
 that implements Laravel's auth system.
 
-This package provides the 2 following guards to authenticate **User** and **Client** 
+This package provides the two following guards to authenticate **User** and **Client** 
 tokens. The following are the configurations for the guards.
 
-### User Guard
+#### User Guard
 
 ```php
 'oauth2_user' => [
@@ -70,7 +73,7 @@ tokens. The following are the configurations for the guards.
 ],
 ```
 
-### Client Guard
+#### Client Guard
 ```php
 'oauth2_client' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Guard\OAuth2ClientGuard::class,
@@ -81,14 +84,14 @@ tokens. The following are the configurations for the guards.
 ],
 ```
 
-## Provider
+### Provider
 
-This package has 3 data providers to retrieve User/Client data using the access token
+This package has three data providers to retrieve User/Client data from the access token
 received from incoming request. The following are the available providers:
 
-- `API`: User/Client data is retrieved by requesting API to OAuth Server.
-- `Database`: User/Client data is retrieved by connecting to OAuth Database.
-- `Stateless`: User/Client data is retrieved from token payload.
+- **API**: User/Client data is retrieved by requesting API to OAuth Server. Requires the `menumbing/http-client` package to be installed.
+- **Database**: User/Client data is retrieved by connecting to OAuth Database. Requires the `hyperf/database` package to be installed.
+- **Stateless**: User/Client data is retrieved from token payload.
 
 ### API Provider
 
@@ -96,6 +99,18 @@ received from incoming request. The following are the available providers:
 ```php
 'api_user' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Provider\User\ApiUserProvider::class,
+    'options' => [
+        'http_client' => 'oauth2',
+    ],
+],
+```
+#### Client
+```php
+'api_client' => [
+    'driver' => \Menumbing\OAuth2\ResourceServer\Provider\Client\ApiClientProvider::class,
+    'options' => [
+        'http_client' => 'oauth2',
+    ],
 ],
 ```
 

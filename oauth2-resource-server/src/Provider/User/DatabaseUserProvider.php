@@ -11,7 +11,6 @@ use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use HyperfExtension\Auth\Contracts\UserProviderInterface;
 use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\OAuth2\ResourceServer\Contract\User;
-use function Hyperf\Config\config;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
@@ -40,7 +39,7 @@ class DatabaseUserProvider implements UserProviderInterface
             throw new AuthorizationException('User not found or no longer active.', 401);
         }
 
-        return new User((array) $userData);
+        return new User((array)$userData);
     }
 
     public function updateRememberToken(AuthenticatableInterface $user, string $token): void

@@ -11,7 +11,6 @@ use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\OAuth2\ResourceServer\Contract\Client;
 use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
-use function Hyperf\Config\config;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>

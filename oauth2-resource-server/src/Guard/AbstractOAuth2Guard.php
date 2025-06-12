@@ -12,14 +12,12 @@ use HyperfExtension\Auth\Contracts\GuardInterface;
 use HyperfExtension\Auth\Contracts\UserProviderInterface;
 use HyperfExtension\Auth\GuardHelpers;
 use InvalidArgumentException;
-use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
 use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
 use Menumbing\OAuth2\ResourceServer\OAuth2GuardHelpers;
 use Menumbing\OAuth2\ResourceServer\Provider\AccessToken\AccessTokenProviderResolverTrait;
 use Menumbing\OAuth2\ResourceServer\ResourceServerAuthenticator;
 use Menumbing\OAuth2\ResourceServer\Util\RequestExtractor;
 use Menumbing\OAuth2\ResourceServer\ValidatesScopes;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use function Hyperf\Support\make;
 
@@ -36,10 +34,9 @@ abstract class AbstractOAuth2Guard implements GuardInterface
     public function __construct(
         protected RequestInterface            $request,
         protected ResourceServerAuthenticator $authenticator,
-        protected ContainerInterface          $container,
         protected ConfigInterface             $config,
         UserProviderInterface                 $provider,
-        array $options = [],
+        array                                 $options = [],
     )
     {
         $this->provider = $provider;
