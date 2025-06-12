@@ -33,6 +33,7 @@
     },
     "suggest": {
         "menumbing/http-client": "Required to enable user provider for authenticating users via OAuth Server API",
+        "hyperf/database": "Required to enable user provider for authenticating users via Database Connection",
         "swow/swow": "Required to create swow components."
     },
     "minimum-stability": "dev",

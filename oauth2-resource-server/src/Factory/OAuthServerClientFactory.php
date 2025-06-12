@@ -6,7 +6,6 @@ namespace Menumbing\OAuth2\ResourceServer\Factory;
 
 use Hyperf\Contract\ConfigInterface;
 use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
-use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
 use Psr\Container\ContainerInterface;
 
 /**
