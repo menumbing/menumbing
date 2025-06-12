@@ -29,8 +29,6 @@ class ConfigProvider
                 ResourceServer::class                 => ResourceServerFactory::class,
                 AccessTokenRepositoryInterface::class => AccessTokenRepositoryFactory::class,
             ],
-            'commands'     => [
-            ],
             'publish'      => [
                 [
                     'id'          => 'config',
