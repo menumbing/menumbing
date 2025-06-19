@@ -45,6 +45,8 @@ jobs:
             split_repository: 'event-stream'
           - local_path: 'exception'
             split_repository: 'exception'
+          - local_path: 'oauth2-resource-server'
+            split_repository: 'oauth2-resource-server'
 
     steps:
       - uses: actions/checkout@v2
