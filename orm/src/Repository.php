@@ -9,6 +9,7 @@ use Hyperf\Contract\LengthAwarePaginatorInterface;
 use Menumbing\Orm\Constant\LockMode;
 use Menumbing\Orm\Contract\CriterionInterface;
 use Menumbing\Orm\Contract\PersistentInterface;
+use Menumbing\Orm\Contract\QueryBuilderFactoryInterface;
 use Menumbing\Orm\Contract\QueryBuilderInterface;
 use Menumbing\Orm\Contract\RepositoryInterface;
 use Menumbing\Orm\Criteria\Criteria;
@@ -26,17 +27,13 @@ use function Hyperf\Tappable\tap;
  */
 abstract class Repository implements RepositoryInterface
 {
-    protected Model $model;
-    protected QueryBuilderInterface $query;
-    protected PersistentInterface $persistent;
+    private array $criteria = [];
 
-    public function __construct(
-        QueryBuilderInterface $query,
-        PersistentInterface $persistent,
+    final public function __construct(
+        protected QueryBuilderFactoryInterface $queryBuilderFactory,
+        protected PersistentInterface $persistent,
+        protected string $modelClass,
     ) {
-        $this->query = $query;
-        $this->persistent = $persistent;
-        $this->model = $this->query->getModel();
     }
 
     public function withRelations(array $relations): static
@@ -46,7 +43,7 @@ abstract class Repository implements RepositoryInterface
 
     public function withCriteria(CriterionInterface|array $criteria): static
     {
-        return tap($this, fn() => $this->query->withCriteria($criteria));
+        return tap($this, fn() => array_push($this->criteria, $criteria));
     }
 
     public function withLock(LockMode $lockMode): static
@@ -61,7 +58,7 @@ abstract class Repository implements RepositoryInterface
      */
     public function findById(int|string $id): ?Model
     {
-        return $this->query->findByKey($id);
+        return $this->newQuery()->findByKey($id);
     }
 
     /**
@@ -71,7 +68,7 @@ abstract class Repository implements RepositoryInterface
      */
     public function findOneBy(array $criteria): ?Model
     {
-        return $this->query->withCriteria(new Criteria($criteria))->first();
+        return $this->newQuery()->withCriteria($this->releaseCriteria(new Criteria($criteria)))->first();
     }
 
     /**
@@ -81,7 +78,7 @@ abstract class Repository implements RepositoryInterface
      */
     public function findBy(array $criteria): Collection
     {
-        return $this->query->withCriteria(new Criteria($criteria))->get();
+        return $this->newQuery()->withCriteria($this->releaseCriteria(new Criteria($criteria)))->get();
     }
 
     /**
@@ -89,7 +86,7 @@ abstract class Repository implements RepositoryInterface
      */
     public function findAll(): Collection
     {
-        return $this->query->get();
+        return $this->newQuery()->withCriteria($this->releaseCriteria())->get();
     }
 
     /**
@@ -102,7 +99,7 @@ abstract class Repository implements RepositoryInterface
      */
     public function paginate(int $pageSize, array $columns = ['*'], string $pageName = 'page', ?int $page = null): LengthAwarePaginatorInterface
     {
-        return $this->query->paginate($pageSize, $columns, $pageName, $page);
+        return $this->newQuery()->withCriteria($this->releaseCriteria())->paginate($pageSize, $columns, $pageName, $page);
     }
 
     /**
@@ -123,5 +120,20 @@ abstract class Repository implements RepositoryInterface
     public function delete(Model $model): Model
     {
         return $this->persistent->delete($model);
+    }
+
+    protected function releaseCriteria(array|CriterionInterface $addCriteria = []): array
+    {
+        $criteria = $this->criteria;
+        $this->criteria = [];
+
+        $addCriteria = is_array($addCriteria) ? $addCriteria : [$addCriteria];
+
+        return [...$criteria, ...$addCriteria];
+    }
+
+    protected function newQuery(): QueryBuilderInterface
+    {
+        return $this->queryBuilderFactory->create($this->modelClass);
     }
 }
