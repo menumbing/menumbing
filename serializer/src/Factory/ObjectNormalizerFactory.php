@@ -7,6 +7,7 @@ namespace Menumbing\Serializer\Factory;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 /**
@@ -16,9 +17,12 @@ class ObjectNormalizerFactory
 {
     public function __invoke(): ObjectNormalizer
     {
-        return new ObjectNormalizer(propertyTypeExtractor: new PropertyInfoExtractor(
-            [new PhpDocExtractor()],
-            [new ReflectionExtractor()],
-        ));
+        return new ObjectNormalizer(
+            nameConverter: new CamelCaseToSnakeCaseNameConverter(),
+            propertyTypeExtractor: new PropertyInfoExtractor(
+                [new PhpDocExtractor()],
+                [new ReflectionExtractor()],
+            ),
+        );
     }
 }
