@@ -7,7 +7,7 @@ namespace Menumbing\OAuth2\ResourceServer\Exception;
 use Hyperf\Collection\Arr;
 use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\Contract\Exception\HasHttpResponseInterface;
-use Menumbing\Resource\Trait\ExceptionWithPayload;
+use Menumbing\Exception\Trait\ExceptionWithPayload;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
