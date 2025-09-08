@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Menumbing\OAuth2\ResourceServer\Client;
+namespace Menumbing\OAuth2\ResourceServer\HttpClient;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;
@@ -11,7 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class OAuthServerClient
+class OAuth2ServerHttpClient
 {
     public function __construct(protected ClientInterface $httpClient)
     {
@@ -21,7 +21,7 @@ class OAuthServerClient
     {
         $response = $this->httpClient->request(
             'GET',
-            '/oauth2/me',
+            '/v1/oauth2/me',
             [
                 RequestOptions::HEADERS => [
                     'Authorization' => 'Bearer ' . $token,
@@ -36,7 +36,7 @@ class OAuthServerClient
     {
         $response = $this->httpClient->request(
             'GET',
-            sprintf('/oauth2/clients/%s', $clientId),
+            sprintf('/v1/oauth2/clients/%s', $clientId),
             [
                 RequestOptions::HEADERS => [
                     'Authorization' => 'Bearer ' . $token,
@@ -51,7 +51,7 @@ class OAuthServerClient
     {
         $response = $this->httpClient->request(
             'GET',
-            sprintf('/oauth2/tokens/%s/validity', $tokenId),
+            sprintf('/v1/oauth2/tokens/%s/validity', $tokenId),
         );
         
         return $this->decodeResponse($response);

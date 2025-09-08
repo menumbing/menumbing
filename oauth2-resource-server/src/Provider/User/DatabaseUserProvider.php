@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Menumbing\OAuth2\ResourceServer\Provider\User;
 
-use BadMethodCallException;
 use Hyperf\Database\ConnectionInterface;
 use Hyperf\Database\ConnectionResolverInterface;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
-use HyperfExtension\Auth\Contracts\UserProviderInterface;
 use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\OAuth2\ResourceServer\Contract\User;
+use Menumbing\OAuth2\ResourceServer\Provider\AbstractOAuth2Provider;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class DatabaseUserProvider implements UserProviderInterface
+class DatabaseUserProvider extends AbstractOAuth2Provider
 {
     protected ConnectionInterface $connection;
 
@@ -24,11 +23,6 @@ class DatabaseUserProvider implements UserProviderInterface
         $connection = $options['connection'] ?? 'default';
 
         $this->connection = $connectionResolver->connection($connection);
-    }
-
-    public function retrieveById($identifier): ?AuthenticatableInterface
-    {
-        throw new BadMethodCallException();
     }
 
     public function retrieveByToken($identifier, string $token): ?AuthenticatableInterface
@@ -40,20 +34,5 @@ class DatabaseUserProvider implements UserProviderInterface
         }
 
         return new User((array)$userData);
-    }
-
-    public function updateRememberToken(AuthenticatableInterface $user, string $token): void
-    {
-        throw new BadMethodCallException();
-    }
-
-    public function retrieveByCredentials(array $credentials): ?AuthenticatableInterface
-    {
-        throw new BadMethodCallException();
-    }
-
-    public function validateCredentials(AuthenticatableInterface $user, array $credentials): bool
-    {
-        throw new BadMethodCallException();
     }
 }

@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Menumbing\OAuth2\ResourceServer\Provider\Client;
 
-use BadMethodCallException;
 use Hyperf\Database\ConnectionInterface;
 use Hyperf\Database\ConnectionResolverInterface;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
 use HyperfExtension\Auth\Exceptions\AuthorizationException;
 use Menumbing\OAuth2\ResourceServer\Contract\Client;
-use Menumbing\OAuth2\ResourceServer\Contract\ClientProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Provider\AbstractOAuth2Provider;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class DatabaseClientProvider implements ClientProviderInterface
+class DatabaseClientProvider extends AbstractOAuth2Provider
 {
     protected ConnectionInterface $connection;
 
@@ -26,34 +25,14 @@ class DatabaseClientProvider implements ClientProviderInterface
         $this->connection = $connectionResolver->connection($connection);
     }
 
-    public function retrieveById($identifier): ?AuthenticatableInterface
-    {
-        throw new BadMethodCallException();
-    }
-
     public function retrieveByToken($identifier, string $token): ?AuthenticatableInterface
     {
-        $userData = $this->connection->table('oauth_clients')->find($identifier);
+        $clientData = $this->connection->table('oauth_clients')->find($identifier);
 
-        if (null === $userData) {
+        if (null === $clientData) {
             throw new AuthorizationException('Client not found or no longer active.', 401);
         }
 
-        return new Client((array)$userData);
-    }
-
-    public function updateRememberToken(AuthenticatableInterface $user, string $token): void
-    {
-        throw new BadMethodCallException();
-    }
-
-    public function retrieveByCredentials(array $credentials): ?AuthenticatableInterface
-    {
-        throw new BadMethodCallException();
-    }
-
-    public function validateCredentials(AuthenticatableInterface $user, array $credentials): bool
-    {
-        throw new BadMethodCallException();
+        return new Client((array)$clientData);
     }
 }
