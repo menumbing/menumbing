@@ -8,14 +8,14 @@ use BadMethodCallException;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
-use Menumbing\OAuth2\ResourceServer\Contract\AccessTokenProviderInterface;
+use Menumbing\OAuth2\ResourceServer\Contract\TokenValidatorInterface;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
 class AccessTokenRepository implements AccessTokenRepositoryInterface
 {
-    public function __construct(protected AccessTokenProviderInterface $provider)
+    public function __construct(protected TokenValidatorInterface $tokenValidator)
     {
     }
 
@@ -36,6 +36,6 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
 
     public function isAccessTokenRevoked(string $tokenId): bool
     {
-        return $this->provider->isTokenRevoked($tokenId);
+        return $this->tokenValidator->isTokenRevoked($tokenId);
     }
 }

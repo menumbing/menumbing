@@ -7,9 +7,8 @@ namespace Menumbing\OAuth2\ResourceServer\Contract;
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-interface OAuthUserInterface
+interface ClientInterface
 {
     public function getIdentifier(): string;
-
-    public function getName(): string;
+    public function getName(): ?string;
 }

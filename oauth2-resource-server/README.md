@@ -96,6 +96,7 @@ received from incoming request. The following are the available providers:
 ### API Provider
 
 #### User
+
 ```php
 'api_user' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Provider\User\ApiUserProvider::class,
@@ -105,9 +106,10 @@ received from incoming request. The following are the available providers:
 ],
 ```
 #### Client
+
 ```php
 'api_client' => [
-    'driver' => \Menumbing\OAuth2\ResourceServer\Provider\Client\ApiClientProvider::class,
+    'driver' => \Menumbing\OAuth2\ResourceServer\Provider\Client\ApiClientResolver::class,
     'options' => [
         'http_client' => 'oauth2',
     ],
@@ -117,6 +119,7 @@ received from incoming request. The following are the available providers:
 ### Database Provider
 
 #### User
+
 ```php
 'database_user' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Provider\User\DatabaseUserProvider::class,
@@ -127,6 +130,7 @@ received from incoming request. The following are the available providers:
 ```
 
 #### Client
+
 ```php
 'database_client' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Provider\Client\DatabaseClientProvider::class,
@@ -139,6 +143,7 @@ received from incoming request. The following are the available providers:
 ### Stateless Provider
 
 #### User
+
 ```php
 'stateless_user' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Provider\User\StatelessUserProvider::class,
@@ -146,6 +151,7 @@ received from incoming request. The following are the available providers:
 ```
 
 #### Client
+
 ```php
 'stateless_client' => [
     'driver' => \Menumbing\OAuth2\ResourceServer\Provider\Client\StatelessClientProvider::class,

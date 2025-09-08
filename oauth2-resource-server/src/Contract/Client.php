@@ -10,7 +10,7 @@ use HyperfExtension\Auth\GenericUser;
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class Client extends GenericUser implements OAuthClientInterface, Arrayable
+class Client extends GenericUser implements ClientInterface, Arrayable
 {
     public function getIdentifier(): string
     {

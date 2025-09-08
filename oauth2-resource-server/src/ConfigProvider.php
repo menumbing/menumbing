@@ -12,23 +12,11 @@ declare(strict_types=1);
 
 namespace Menumbing\OAuth2\ResourceServer;
 
-use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
-use League\OAuth2\Server\ResourceServer;
-use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
-use Menumbing\OAuth2\ResourceServer\Factory\AccessTokenRepositoryFactory;
-use Menumbing\OAuth2\ResourceServer\Factory\OAuthServerClientFactory;
-use Menumbing\OAuth2\ResourceServer\Factory\ResourceServerFactory;
-
 class ConfigProvider
 {
     public function __invoke(): array
     {
         return [
-            'dependencies' => [
-                OAuthServerClient::class              => OAuthServerClientFactory::class,
-                ResourceServer::class                 => ResourceServerFactory::class,
-                AccessTokenRepositoryInterface::class => AccessTokenRepositoryFactory::class,
-            ],
             'publish'      => [
                 [
                     'id'          => 'config',

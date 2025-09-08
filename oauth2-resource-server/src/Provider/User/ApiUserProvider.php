@@ -4,33 +4,27 @@ declare(strict_types=1);
 
 namespace Menumbing\OAuth2\ResourceServer\Provider\User;
 
-use BadMethodCallException;
 use HyperfExtension\Auth\Contracts\AuthenticatableInterface;
-use HyperfExtension\Auth\Contracts\UserProviderInterface;
-use Menumbing\OAuth2\ResourceServer\Client\OAuthServerClient;
 use Menumbing\OAuth2\ResourceServer\Contract\User;
+use Menumbing\OAuth2\ResourceServer\HttpClient\OAuth2ServerHttpClient;
+use Menumbing\OAuth2\ResourceServer\Provider\AbstractOAuth2Provider;
 use Psr\Container\ContainerInterface;
 
 /**
  * @author  Aldi Arief <aldiarief598@gmail.com>
  */
-class ApiUserProvider implements UserProviderInterface
+class ApiUserProvider extends AbstractOAuth2Provider
 {
-    protected OAuthServerClient $client;
+    protected OAuth2ServerHttpClient $client;
 
     public function __construct(
         ContainerInterface $container,
-        array              $options,
+        ?array             $options = [],
     )
     {
-        $this->client = new OAuthServerClient(
+        $this->client = new OAuth2ServerHttpClient(
             $container->get($options['http_client'] ?? 'oauth2')
         );
-    }
-
-    public function retrieveById($identifier): ?AuthenticatableInterface
-    {
-        throw new BadMethodCallException();
     }
 
     public function retrieveByToken($identifier, string $token): ?AuthenticatableInterface
@@ -38,20 +32,5 @@ class ApiUserProvider implements UserProviderInterface
         return new User(
             $this->client->userInfo($token)
         );
-    }
-
-    public function updateRememberToken(AuthenticatableInterface $user, string $token): void
-    {
-        throw new BadMethodCallException();
-    }
-
-    public function retrieveByCredentials(array $credentials): ?AuthenticatableInterface
-    {
-        throw new BadMethodCallException();
-    }
-
-    public function validateCredentials(AuthenticatableInterface $user, array $credentials): bool
-    {
-        throw new BadMethodCallException();
     }
 }
