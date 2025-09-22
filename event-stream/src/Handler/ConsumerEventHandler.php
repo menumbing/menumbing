@@ -24,6 +24,10 @@ class ConsumerEventHandler
 
     public function __invoke(string $groupName, StreamMessage $message): Result
     {
+        if (!$this->eventRegistry->has($message->type)) {
+            return Result::ACK;
+        }
+
         $metadata = $this->eventRegistry->getClassByName($message->type);
 
         try {
