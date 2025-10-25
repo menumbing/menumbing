@@ -34,7 +34,9 @@
         "swoole/ide-helper": "dev-master"
     },
     "suggest": {
-        "swow/swow": "Required to create swow components."
+        "swow/swow": "Required to create swow components.",
+        "hyperf/kafka": "Required to use event stream with Kafka.",
+        "ramsey/uuid": "Required to use default Kafka id."
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
