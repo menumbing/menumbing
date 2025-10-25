@@ -54,7 +54,7 @@ class ConsumerFactory
         $consumerConfig->setSendTimeout($config['send_timeout']);
         $consumerConfig->setGroupId($options['group_id'] ?? uniqid('hyperf-kafka-'));
         $consumerConfig->setGroupInstanceId(sprintf('%s-%s', $options['group_id'], uniqid()));
-        $consumerConfig->setMemberId($options['member_id'] ?: '');
+        $consumerConfig->setMemberId($options['member_id'] ?? '');
         $consumerConfig->setInterval($config['interval']);
         $consumerConfig->setBootstrapServers($config['bootstrap_servers']);
         $consumerConfig->setClient($config['client'] ?? SwooleClient::class);

@@ -31,7 +31,7 @@ class KafkaStream implements StreamInterface
         ProducerManager $producerManager,
         protected ConsumerFactory $consumerFactory,
         protected Serializer $serializer,
-        protected ?IdProviderInterface $idProvider = null,
+        protected ?IdProviderInterface $id = null,
         protected array $options = [],
     ) {
         $this->producer = $producerManager->getProducer($this->options['pool'] ?? 'default');
@@ -89,7 +89,7 @@ class KafkaStream implements StreamInterface
 
     public function getIdleMessages(string $consumer, string $group, array $streams, int $retryAfter): Generator
     {
-        return [];
+        yield from [];
     }
 
     public function ack(string $group, string $stream, array $ids): bool
