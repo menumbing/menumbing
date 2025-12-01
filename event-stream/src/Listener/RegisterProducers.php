@@ -13,6 +13,7 @@ use Menumbing\EventStream\Annotation\ProducedEvent;
 use Menumbing\EventStream\Factory\StreamFactory;
 use Menumbing\EventStream\Handler\ProduceEventHandler;
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
 /**
@@ -36,11 +37,12 @@ final class RegisterProducers implements ListenerInterface
     {
         $listenerProvider = $this->container->get(ListenerProviderInterface::class);
         $streamFactory = $this->container->get(StreamFactory::class);
+        $eventDispatcher = $this->container->get(EventDispatcherInterface::class);
 
         if ($listenerProvider instanceof ListenerProvider) {
             foreach ($this->getAnnotations() as $class => $annotation) {
                 $driver = $streamFactory->get($annotation->driver);
-                $listenerProvider->on($class, new ProduceEventHandler($driver, $annotation), -999999999);
+                $listenerProvider->on($class, new ProduceEventHandler($driver, $annotation, $eventDispatcher), -999999999);
             }
         }
     }

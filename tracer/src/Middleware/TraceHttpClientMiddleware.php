@@ -71,13 +71,13 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
 
     protected function appendResponseSpanTags(Span $span, ResponseInterface $response, array $options): void
     {
-        $span->setTag('http.response.status_code', $response->getStatusCode());
+        $span->setTag('http_client.response.status_code', $response->getStatusCode());
 
         if ($response->getStatusCode() >= 400) {
             $span->setTag('error', true);
-            $span->setTag('http.response.body', (string) $response->getBody());
+            $span->setTag('http_client.response.body', (string) $response->getBody());
         } else if ($this->isCapture($options, HttpClientTrace::TRACE_CAPTURE_RESPONSE)) {
-            $span->setTag('http.response.body', (string) $response->getBody());
+            $span->setTag('http_client.response.body', (string) $response->getBody());
         }
 
         $span->finish();
@@ -85,19 +85,19 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
 
     protected function appendRequestSpanTags(Span $span, RequestInterface $request, array $options): void
     {
-        $span->setTag('http.request.url', (string) $request->getUri());
-        $span->setTag('http.request.path', $request->getUri()->getPath());
-        $span->setTag('http.request.method', $request->getMethod());
+        $span->setTag('http_client.request.url', (string) $request->getUri());
+        $span->setTag('http_client.request.path', $request->getUri()->getPath());
+        $span->setTag('http_client.request.method', $request->getMethod());
 
         if ($this->isCapture($options, HttpClientTrace::TRACE_CAPTURE_HEADERS)) {
             foreach ($request->getHeaders() as $header => $values) {
-                $span->setTag('http.request.header.' . $header, implode(', ', $values));
+                $span->setTag('http_client.request.header.' . $header, implode(', ', $values));
             }
         }
 
         if ($this->isCapture($options, HttpClientTrace::TRACE_CAPTURE_BODY)) {
             if (!empty($content = (string) $request->getBody())) {
-                $span->setTag('http.request.body', $content);
+                $span->setTag('http_client.request.body', $content);
             }
         }
 
@@ -111,13 +111,13 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
     protected function getSpanName(RequestInterface $request, array $options): string
     {
         if (null !== $operation = $this->getTraceOperation($options)) {
-            return "HTTP Request {$operation}";
+            return "http_client.request: {$operation}";
         }
 
         $method = $request->getMethod();
         $uri = (string) $request->getUri();
 
-        return "HTTP Request [{$method}] {$uri}";
+        return "http_client.request: {$method} {$uri}";
     }
 
     protected function getTraceOperation(array $options): ?string

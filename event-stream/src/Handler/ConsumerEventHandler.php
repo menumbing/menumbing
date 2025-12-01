@@ -31,11 +31,7 @@ class ConsumerEventHandler
         $metadata = $this->eventRegistry->getClassByName($message->type);
 
         try {
-            $this->event->dispatch(
-                $this->serializer->denormalize($message->data, $metadata['class'])
-            );
-
-            return Result::ACK;
+            return $this->handle($message, $metadata);
         } catch (\Throwable $e) {
             $retryCount = $message->context['retry_count'] ?? 0;
 
@@ -45,5 +41,14 @@ class ConsumerEventHandler
 
             return Result::NACK;
         }
+    }
+
+    protected function handle(StreamMessage $message, array $metadata): Result
+    {
+        $this->event->dispatch(
+            $this->serializer->denormalize($message->data, $metadata['class'])
+        );
+
+        return Result::ACK;
     }
 }

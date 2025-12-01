@@ -20,8 +20,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 
-use function Hyperf\Coroutine\defer;
-
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
@@ -42,20 +40,10 @@ class TraceMiddleware implements MiddlewareInterface
         $tracer = TracerContext::getTracer();
         $span = $this->buildRequestSpan($request);
 
-        defer(function () use ($tracer) {
-            try {
-                $tracer->flush();
-            } catch (\Throwable) {
-            }
-        });
         try {
             $response = $handler->handle($request);
 
             $this->buildResponseSpan($span, $response);
-
-            if ($traceId = TracerContext::getTraceId()) {
-                $response = $response->withHeader('Trace-Id', $traceId);
-            }
         } catch (Throwable $exception) {
             $this->appendExceptionToSpan($span, $exception);
 
@@ -73,7 +61,12 @@ class TraceMiddleware implements MiddlewareInterface
 
             throw $exception;
         } finally {
+            if ($traceId = TracerContext::getTraceId()) {
+                $response = $response->withHeader('Trace-Id', $traceId);
+            }
+
             $span->finish();
+            $tracer->flush();
         }
 
         return $response;
