@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Menumbing\Tracer\Aspect;
 
 use Hyperf\Context\Context;
+use Hyperf\Contract\ConfigInterface;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\Tracer\SpanStarter;
@@ -12,6 +13,7 @@ use Hyperf\Tracer\SwitchManager;
 use Hyperf\Tracer\TracerContext;
 use Menumbing\Contract\EventStream\StreamMessage;
 use Menumbing\EventStream\Handler\ConsumerEventHandler;
+use Menumbing\Serializer\Factory\SerializerFactory;
 use OpenTracing\Span;
 use OpenTracing\Tracer;
 use Throwable;
@@ -29,8 +31,11 @@ class EventStreamConsumerAspect extends AbstractAspect
         ConsumerEventHandler::class.'::handle',
     ];
 
-    public function __construct(private readonly SwitchManager $switchManager)
-    {
+    public function __construct(
+        private readonly SwitchManager $switchManager,
+        private readonly ConfigInterface $config,
+        private readonly SerializerFactory $serializerFactory,
+    ) {
     }
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint)
@@ -38,9 +43,13 @@ class EventStreamConsumerAspect extends AbstractAspect
         $this->reset();
 
         $tracer = TracerContext::getTracer();
-        $span = $this->initSpan($tracer, $proceedingJoinPoint->arguments['keys']['message']);
+        $message = $proceedingJoinPoint->arguments['keys']['message'];
+        $span = $this->capturePayload(
+            $this->initSpan($tracer, $message),
+            $message
+        );
 
-        if ($this->switchManager->isEnable('event_stream_consumer') === false) {
+        if (false === $this->switchManager->isEnable('event_stream_consumer')) {
             return $proceedingJoinPoint->process();
         }
 
@@ -82,6 +91,24 @@ class EventStreamConsumerAspect extends AbstractAspect
         $span->setTag('event_stream.consume.event_type', $message->type);
 
         return $span;
+    }
+
+    protected function capturePayload(Span $span, StreamMessage $message): Span
+    {
+        if (false === $this->switchManager->isEnable('event_stream_payload')) {
+            return $span;
+        }
+
+        $span->setTag('event_stream.payload', $this->serialize($message->data));
+
+        return $span;
+    }
+
+    protected function serialize(mixed $data): string
+    {
+        $serializer = $this->serializerFactory->get($this->config->get('event_stream.serialization.serializer', 'default'));
+
+        return $serializer->serialize($data, $this->config->get('event_stream.serialization.format', 'json'));
     }
 
     protected function reset(): void

@@ -30,6 +30,7 @@ return [
         'response_body' => (bool) env('TRACER_ENABLE_RESPONSE_BODY', false),
         'event_stream_producer' => (bool) env('TRACER_ENABLE_EVENT_STREAM_PRODUCER', false),
         'event_stream_consumer' => (bool) env('TRACER_ENABLE_EVENT_STREAM_CONSUMER', false),
+        'event_stream_payload' => (bool) env('TRACER_ENABLE_EVENT_STREAM_PAYLOAD', false),
         'ignore_exceptions' => [],
         'trace_methods' => [],
     ],

@@ -13,6 +13,7 @@ use Hyperf\Tracer\TracerContext;
 use Menumbing\Contract\EventStream\StreamMessage;
 use Menumbing\EventStream\Handler\ProduceEventHandler;
 use Menumbing\Serializer\Factory\SerializerFactory;
+use OpenTracing\Span;
 use OpenTracing\SpanContext;
 
 use const OpenTracing\Formats\TEXT_MAP;
@@ -37,16 +38,17 @@ class EventStreamPublisherAspect extends AbstractAspect
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint): mixed
     {
-        if ($this->switchManager->isEnable('event_stream_producer') === false) {
+        if (false === $this->switchManager->isEnable('event_stream_producer')) {
             return $proceedingJoinPoint->process();
         }
 
         /** @var StreamMessage $message */
         $message = $proceedingJoinPoint->arguments['keys']['message'];
 
-        $span = $this->startSpan('event_stream.produce: ' . $message->type);
-        $span->setTag('event_stream.produce.stream', $message->stream);
-        $span->setTag('event_stream.produce.event_type', $message->type);
+        $span = $this->capturePayload(
+            $this->initSpan($message),
+            $message
+        );
 
         $proceedingJoinPoint->arguments['keys']['message'] = $this->injectContext($message, $span->getContext());
 
@@ -65,6 +67,33 @@ class EventStreamPublisherAspect extends AbstractAspect
         }
 
         return $result;
+    }
+
+    protected function initSpan(StreamMessage $message): Span
+    {
+        $span = $this->startSpan('event_stream.produce: ' . $message->type);
+        $span->setTag('event_stream.produce.stream', $message->stream);
+        $span->setTag('event_stream.produce.event_type', $message->type);
+
+        return $span;
+    }
+
+    protected function capturePayload(Span $span, StreamMessage $message): Span
+    {
+        if (false === $this->switchManager->isEnable('event_stream_payload')) {
+            return $span;
+        }
+
+        $span->setTag('event_stream.payload', $this->serialize($message->data));
+
+        return $span;
+    }
+
+    protected function serialize(mixed $data): string
+    {
+        $serializer = $this->serializerFactory->get($this->config->get('event_stream.serialization.serializer', 'default'));
+
+        return $serializer->serialize($data, $this->config->get('event_stream.serialization.format', 'json'));
     }
 
     protected function injectContext(StreamMessage $message, SpanContext $spanContext): StreamMessage
