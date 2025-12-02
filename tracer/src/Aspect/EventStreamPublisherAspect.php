@@ -8,9 +8,11 @@ use Hyperf\Contract\ConfigInterface;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\Tracer\SpanStarter;
+use Hyperf\Tracer\SwitchManager;
 use Hyperf\Tracer\TracerContext;
 use Menumbing\Contract\EventStream\StreamMessage;
 use Menumbing\EventStream\Handler\ProduceEventHandler;
+use Menumbing\Serializer\Factory\SerializerFactory;
 use OpenTracing\SpanContext;
 
 use const OpenTracing\Formats\TEXT_MAP;
@@ -26,13 +28,16 @@ class EventStreamPublisherAspect extends AbstractAspect
         ProduceEventHandler::class . '::produce',
     ];
 
-    public function __construct(private readonly ConfigInterface $config)
-    {
+    public function __construct(
+        private readonly ConfigInterface $config,
+        private readonly SwitchManager $switchManager,
+        private readonly SerializerFactory $serializerFactory,
+    ) {
     }
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint): mixed
     {
-        if ($this->config->get('opentracing.enable.event_stream_producer', false) === false) {
+        if ($this->switchManager->isEnable('event_stream_producer') === false) {
             return $proceedingJoinPoint->process();
         }
 
