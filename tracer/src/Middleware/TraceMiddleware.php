@@ -37,8 +37,11 @@ class TraceMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        /** @var Dispatched $dispatched */
+        $dispatched = $request->getAttribute(Dispatched::class);
+
         $tracer = TracerContext::getTracer();
-        $span = $this->buildRequestSpan($request);
+        $span = $this->buildRequestSpan($request, $dispatched);
 
         try {
             $response = $handler->handle($request);
@@ -51,8 +54,6 @@ class TraceMiddleware implements MiddlewareInterface
                 $span->setTag($this->spanTagManager->get('response', 'status_code'), (string) $exception->getStatusCode());
             }
 
-            /** @var Dispatched $dispatched */
-            $dispatched = $request->getAttribute(Dispatched::class);
             $response = $this->exceptionHandler->dispatch(
                 $exception, $this->config->get('exceptions.handler.' . $dispatched->serverName)
             );
@@ -84,10 +85,13 @@ class TraceMiddleware implements MiddlewareInterface
         }
     }
 
-    protected function buildRequestSpan(ServerRequestInterface $request): Span
+    protected function buildRequestSpan(ServerRequestInterface $request, Dispatched $dispatched): Span
     {
         $uri = $request->getUri();
-        $span = $this->startSpan(sprintf('request: %s %s', $request->getMethod(), $uri->getPath()));
+        $route = $dispatched->handler?->route;
+        $spanName = $route ?? $uri->getPath();
+
+        $span = $this->startSpan(sprintf('request.%s: %s', $request->getMethod(), $spanName));
         $span->setTag($this->spanTagManager->get('coroutine', 'id'), (string) Coroutine::id());
         $span->setTag($this->spanTagManager->get('request', 'path'), $uri->getPath());
         $span->setTag($this->spanTagManager->get('request', 'method'), $request->getMethod());

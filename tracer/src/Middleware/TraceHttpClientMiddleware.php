@@ -15,6 +15,7 @@ use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
 use const OpenTracing\Formats\TEXT_MAP;
+use const OpenTracing\Tags\SPAN_KIND_RPC_CLIENT;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -27,7 +28,10 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
     {
         return function (callable $handler): callable {
             return function (RequestInterface $request, array $options) use ($handler): PromiseInterface {
-                $span = $this->startSpan($this->getSpanName($request, $options));
+                $span = $this->startSpan(
+                    name: $this->getSpanName($request, $options),
+                    kind: SPAN_KIND_RPC_CLIENT
+                );
 
                 $this->appendRequestSpanTags($span, $request, $options);
 

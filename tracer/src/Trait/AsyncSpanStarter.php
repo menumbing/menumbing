@@ -20,17 +20,15 @@ trait AsyncSpanStarter
 {
     use SpanStarter;
 
-    protected function initSpan(JobInterface $job, string $spanType, SpanContext $parentContext = null): Span
+    protected function initSpan(JobInterface $job, string $spanType, string $spanKind, SpanContext $parentContext = null): Span
     {
         $jobInfo = $this->parseJobInfo($job);
         $spanName = sprintf('async.%s: %s', $spanType, $jobInfo['name']);
 
         if ($parentContext) {
-            $span = $this->startSpan($spanName, [
-                'child_of' => $parentContext,
-            ]);
+            $span = $this->startSpan($spanName, ['child_of' => $parentContext], $spanKind);
         } else {
-            $span = $this->startSpan($spanName);
+            $span = $this->startSpan($spanName, kind: $spanKind);
         }
 
         $span->setTag('async.job', $jobInfo['job']);

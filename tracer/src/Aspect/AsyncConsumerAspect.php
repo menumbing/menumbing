@@ -17,6 +17,8 @@ use Menumbing\Tracer\Trait\ParentContextExtractor;
 use Menumbing\Tracer\Trait\SpanErrorHandler;
 use Throwable;
 
+use const OpenTracing\Tags\SPAN_KIND_MESSAGE_BUS_CONSUMER;
+
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
@@ -46,7 +48,7 @@ class AsyncConsumerAspect extends AbstractAspect
         $job = $message->job();
 
         $span = $this->capturePayload(
-            $this->initSpan($job, 'consume', $parentContext),
+            $this->initSpan($job, 'consume', SPAN_KIND_MESSAGE_BUS_CONSUMER, $parentContext),
             $job
         );
 

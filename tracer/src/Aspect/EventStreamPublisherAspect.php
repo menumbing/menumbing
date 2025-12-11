@@ -18,6 +18,7 @@ use OpenTracing\Span;
 use OpenTracing\SpanContext;
 
 use const OpenTracing\Formats\TEXT_MAP;
+use const OpenTracing\Tags\SPAN_KIND_MESSAGE_BUS_PRODUCER;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -69,7 +70,10 @@ class EventStreamPublisherAspect extends AbstractAspect
 
     protected function initSpan(StreamMessage $message): Span
     {
-        $span = $this->startSpan('event_stream.produce: ' . $message->type);
+        $span = $this->startSpan(
+            name: 'event_stream.produce: ' . $message->type,
+            kind: SPAN_KIND_MESSAGE_BUS_PRODUCER
+        );
         $span->setTag('event_stream.produce.stream', $message->stream);
         $span->setTag('event_stream.produce.event_type', $message->type);
 

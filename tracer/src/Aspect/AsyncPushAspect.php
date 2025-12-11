@@ -15,6 +15,7 @@ use Menumbing\Tracer\Trait\SpanErrorHandler;
 use OpenTracing\SpanContext;
 
 use const OpenTracing\Formats\TEXT_MAP;
+use const OpenTracing\Tags\SPAN_KIND_MESSAGE_BUS_PRODUCER;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -41,7 +42,10 @@ class AsyncPushAspect extends AbstractAspect
         /** @var JobInterface $job */
         $job = $proceedingJoinPoint->arguments['keys']['job'];
 
-        $span = $this->capturePayload($this->initSpan($job, 'push'), $job);
+        $span = $this->capturePayload(
+            $this->initSpan($job, 'push', SPAN_KIND_MESSAGE_BUS_PRODUCER),
+            $job
+        );
 
         $proceedingJoinPoint->arguments['keys']['job'] = $this->injectContext($job, $span->getContext());
 

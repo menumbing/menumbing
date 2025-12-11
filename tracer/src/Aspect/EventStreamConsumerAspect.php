@@ -20,6 +20,7 @@ use OpenTracing\Tracer;
 use Throwable;
 
 use const OpenTracing\Formats\TEXT_MAP;
+use const OpenTracing\Tags\SPAN_KIND_MESSAGE_BUS_CONSUMER;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -73,11 +74,13 @@ class EventStreamConsumerAspect extends AbstractAspect
     {
         if (!empty($carrier = $message->context['trace'] ?? null)) {
             $parentContext = $tracer->extract(TEXT_MAP, $carrier);
-            $span = $this->startSpan('event_stream.consume: '.$message->type, [
-                'child_of' => $parentContext,
-            ]);
+            $span = $this->startSpan(
+                'event_stream.consume: '.$message->type,
+                ['child_of' => $parentContext],
+                SPAN_KIND_MESSAGE_BUS_CONSUMER
+            );
         } else {
-            $span = $this->startSpan('event_stream.consume: '.$message->type);
+            $span = $this->startSpan('event_stream.consume: '.$message->type, kind: SPAN_KIND_MESSAGE_BUS_CONSUMER);
         }
 
         $span->setTag('event_stream.consume.stream', $message->stream);
