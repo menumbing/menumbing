@@ -80,6 +80,8 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
             $span->setTag('http_client.response.body', (string) $response->getBody());
         }
 
+        $response->getBody()->rewind();
+
         $span->finish();
     }
 
