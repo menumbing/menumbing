@@ -13,6 +13,7 @@ use Hyperf\Tracer\TracerContext;
 use Menumbing\Contract\EventStream\StreamMessage;
 use Menumbing\EventStream\Handler\ProduceEventHandler;
 use Menumbing\Serializer\Factory\SerializerFactory;
+use Menumbing\Tracer\Trait\SpanErrorHandler;
 use OpenTracing\Span;
 use OpenTracing\SpanContext;
 
@@ -24,6 +25,7 @@ use const OpenTracing\Formats\TEXT_MAP;
 class EventStreamPublisherAspect extends AbstractAspect
 {
     use SpanStarter;
+    use SpanErrorHandler;
 
     public array $classes = [
         ProduceEventHandler::class . '::produce',
@@ -55,11 +57,7 @@ class EventStreamPublisherAspect extends AbstractAspect
         try {
             $result = $proceedingJoinPoint->process();
         } catch (\Throwable $e) {
-            $span->setTag('error', true);
-
-            if ($this->switchManager->isEnable('exception') && ! $this->switchManager->isIgnoreException($e)) {
-                $span->log(['message', $e->getMessage(), 'code' => $e->getCode(), 'stacktrace' => $e->getTraceAsString()]);
-            }
+            $this->spanError($this->switchManager, $span, $e);
 
             throw $e;
         } finally {

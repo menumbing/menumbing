@@ -11,6 +11,8 @@ declare(strict_types=1);
  */
 namespace Menumbing\Tracer;
 
+use Menumbing\Tracer\Aspect\AsyncConsumerAspect;
+use Menumbing\Tracer\Aspect\AsyncPushAspect;
 use Menumbing\Tracer\Aspect\EventStreamConsumerAspect;
 use Menumbing\Tracer\Aspect\EventStreamPublisherAspect;
 use Menumbing\Tracer\Aspect\GuzzleHttpClientHandlerFactoryAspect;
@@ -28,6 +30,8 @@ class ConfigProvider
                 GuzzleHttpClientHandlerFactoryAspect::class,
                 EventStreamPublisherAspect::class,
                 EventStreamConsumerAspect::class,
+                AsyncPushAspect::class,
+                AsyncConsumerAspect::class,
             ],
             'annotations' => [
                 'scan' => [

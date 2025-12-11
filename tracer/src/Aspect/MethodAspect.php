@@ -9,6 +9,7 @@ use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\Tracer\SpanStarter;
 use Hyperf\Tracer\SwitchManager;
 use Hyperf\Tracer\TracerContext;
+use Menumbing\Tracer\Trait\SpanErrorHandler;
 use Throwable;
 
 /**
@@ -17,6 +18,7 @@ use Throwable;
 abstract class MethodAspect extends AbstractAspect
 {
     use SpanStarter;
+    use SpanErrorHandler;
 
     public function __construct(protected SwitchManager $switchManager)
     {
@@ -40,10 +42,8 @@ abstract class MethodAspect extends AbstractAspect
         try {
             $result = $proceedingJoinPoint->process();
         } catch (Throwable $e) {
-            if ($this->switchManager->isEnable('exception') && ! $this->switchManager->isIgnoreException($e)) {
-                $span->setTag('error', true);
-                $span->log(['message', $e->getMessage(), 'code' => $e->getCode(), 'stacktrace' => $e->getTraceAsString()]);
-            }
+            $this->spanError($this->switchManager, $span, $e);
+
             throw $e;
         } finally {
             $span->finish();

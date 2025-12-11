@@ -14,6 +14,7 @@ use Hyperf\Tracer\TracerContext;
 use Menumbing\Contract\EventStream\StreamMessage;
 use Menumbing\EventStream\Handler\ConsumerEventHandler;
 use Menumbing\Serializer\Factory\SerializerFactory;
+use Menumbing\Tracer\Trait\SpanErrorHandler;
 use OpenTracing\Span;
 use OpenTracing\Tracer;
 use Throwable;
@@ -26,6 +27,7 @@ use const OpenTracing\Formats\TEXT_MAP;
 class EventStreamConsumerAspect extends AbstractAspect
 {
     use SpanStarter;
+    use SpanErrorHandler;
 
     public array $classes = [
         ConsumerEventHandler::class.'::handle',
@@ -56,16 +58,7 @@ class EventStreamConsumerAspect extends AbstractAspect
         try {
             $result = $proceedingJoinPoint->process();
         } catch (Throwable $e) {
-            $span->setTag('error', true);
-
-            if ($this->switchManager->isEnable('exception') && !$this->switchManager->isIgnoreException($e)) {
-                $span->log([
-                    'message',
-                    $e->getMessage(),
-                    'code' => $e->getCode(),
-                    'stacktrace' => $e->getTraceAsString(),
-                ]);
-            }
+            $this->spanError($this->switchManager, $span, $e);
 
             throw $e;
         } finally {
