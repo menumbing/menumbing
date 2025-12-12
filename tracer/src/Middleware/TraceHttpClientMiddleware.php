@@ -33,6 +33,13 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
                     kind: SPAN_KIND_RPC_CLIENT
                 );
 
+                $span->setTag('http.url', (string) $request->getUri());
+                $span->setTag('http.method', $request->getMethod());
+                $span->setTag('url.full', (string) $request->getUri());
+                $span->setTag('url.path', $request->getUri()->getPath());
+
+                $span->setTag('server.address', $request->getUri()->getHost());
+
                 $this->appendRequestSpanTags($span, $request, $options);
 
                 /** @var PromiseInterface $response */
@@ -75,6 +82,7 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
 
     protected function appendResponseSpanTags(Span $span, ResponseInterface $response, array $options): void
     {
+        $span->setTag('http.status_code', $response->getStatusCode());
         $span->setTag('http_client.response.status_code', $response->getStatusCode());
 
         if ($response->getStatusCode() >= 400) {

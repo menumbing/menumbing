@@ -96,6 +96,9 @@ class TraceMiddleware implements MiddlewareInterface
         $span->setTag($this->spanTagManager->get('request', 'path'), $uri->getPath());
         $span->setTag($this->spanTagManager->get('request', 'method'), $request->getMethod());
         $span->setTag($this->spanTagManager->get('request', 'uri'), (string) $uri);
+        $span->setTag('server.address', $request->getUri()->getHost());
+        $span->setTag('server.port', $request->getUri()->getPort());
+        $span->setTag('http.url', (string) $request->getUri());
 
         foreach ($request->getHeaders() as $key => $value) {
             $span->setTag($this->spanTagManager->get('request', 'header') . '.' . $key, implode(', ', $value));
@@ -110,6 +113,7 @@ class TraceMiddleware implements MiddlewareInterface
 
     protected function buildResponseSpan(Span $span, ResponseInterface $response): Span
     {
+        $span->setTag('http.status_code', $response->getStatusCode());
         $span->setTag($this->spanTagManager->get('response', 'status_code'), (string) $response->getStatusCode());
 
         if ($this->switchManager->isEnable('response_body')) {
