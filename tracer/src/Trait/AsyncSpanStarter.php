@@ -8,6 +8,7 @@ use Hyperf\AsyncQueue\AnnotationJob;
 use Hyperf\AsyncQueue\JobInterface;
 use Hyperf\Stringable\Str;
 use Hyperf\Tracer\SpanStarter;
+use Hyperf\Tracer\TracerContext;
 use OpenTracing\Span;
 use OpenTracing\SpanContext;
 
@@ -33,6 +34,8 @@ trait AsyncSpanStarter
 
         $span->setTag('async.job', $jobInfo['job']);
         $span->setTag('async.max_attempts', $jobInfo['max_attempts']);
+
+        TracerContext::setRoot($span);
 
         return $span;
     }

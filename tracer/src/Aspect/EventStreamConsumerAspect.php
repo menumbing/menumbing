@@ -86,6 +86,8 @@ class EventStreamConsumerAspect extends AbstractAspect
         $span->setTag('event_stream.consume.stream', $message->stream);
         $span->setTag('event_stream.consume.event_type', $message->type);
 
+        TracerContext::setRoot($span);
+
         return $span;
     }
 

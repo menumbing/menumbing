@@ -53,6 +53,8 @@ class EventStreamPublisherAspect extends AbstractAspect
             $message
         );
 
+        TracerContext::setRoot($span);
+
         $proceedingJoinPoint->arguments['keys']['message'] = $this->injectContext($message, $span->getContext());
 
         try {
@@ -76,6 +78,8 @@ class EventStreamPublisherAspect extends AbstractAspect
         );
         $span->setTag('event_stream.produce.stream', $message->stream);
         $span->setTag('event_stream.produce.event_type', $message->type);
+
+        TracerContext::setRoot($span);
 
         return $span;
     }

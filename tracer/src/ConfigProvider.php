@@ -16,7 +16,9 @@ use Menumbing\Tracer\Aspect\AsyncPushAspect;
 use Menumbing\Tracer\Aspect\EventStreamConsumerAspect;
 use Menumbing\Tracer\Aspect\EventStreamPublisherAspect;
 use Menumbing\Tracer\Aspect\GuzzleHttpClientHandlerFactoryAspect;
-use Menumbing\Tracer\Listener\DisableTraceHyperfGuzzle;
+use Menumbing\Tracer\Aspect\RedisAspect;
+use Menumbing\Tracer\Listener\DbQueryExecutedListener;
+use Menumbing\Tracer\Listener\DisableDefaultTraceHyperf;
 
 class ConfigProvider
 {
@@ -24,7 +26,8 @@ class ConfigProvider
     {
         return [
             'listeners' => [
-                DisableTraceHyperfGuzzle::class,
+                DisableDefaultTraceHyperf::class,
+                DbQueryExecutedListener::class,
             ],
             'aspects' => [
                 GuzzleHttpClientHandlerFactoryAspect::class,
@@ -32,6 +35,7 @@ class ConfigProvider
                 EventStreamConsumerAspect::class,
                 AsyncPushAspect::class,
                 AsyncConsumerAspect::class,
+                RedisAspect::class,
             ],
             'annotations' => [
                 'scan' => [

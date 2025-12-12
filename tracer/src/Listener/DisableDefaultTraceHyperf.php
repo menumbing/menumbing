@@ -13,7 +13,7 @@ use Psr\Container\ContainerInterface;
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-class DisableTraceHyperfGuzzle implements ListenerInterface
+class DisableDefaultTraceHyperf implements ListenerInterface
 {
     #[Inject]
     protected ContainerInterface $container;
@@ -31,6 +31,8 @@ class DisableTraceHyperfGuzzle implements ListenerInterface
 
         $switchManager->apply([
             'guzzle' => false,
+            'db' => false,
+            'redis' => false,
         ]);
     }
 }
