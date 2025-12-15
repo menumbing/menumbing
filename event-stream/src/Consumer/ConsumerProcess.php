@@ -119,7 +119,6 @@ abstract class ConsumerProcess extends AbstractProcess
                 $this->event?->dispatch(new AfterConsume($consumerName, $this->groupName, $message, $this->stream, $this->driverName));
             }
         } catch (\Throwable $e) {
-            $this->stream->ack($this->groupName, $this->streamName, [$message->id]);
             $this->event?->dispatch(new ConsumeFailed($consumerName, $this->groupName, $message, $this->stream, $this->driverName, $e));
         }
     }
