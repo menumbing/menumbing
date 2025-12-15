@@ -68,5 +68,29 @@ return [
     'serialization' => [
         'serializer' => 'default',
         'format' => 'json',
-    ]
+    ],
+
+    /**
+     * Exceptions to skip (acknowledge) during consumer processing.
+     *
+     * When an exception occurs while handling a message, the consumer will normally leave the message unacknowledged
+     * so it can be retried later. Add exception classes to this list to *acknowledge the message anyway* when those
+     * exceptions are thrown—effectively skipping retries for known non-recoverable/expected failures (e.g. validation
+     * errors, permanently missing resources).
+     *
+     * Notes:
+     * - Use this to prevent “poison messages” from being retried indefinitely.
+     * - Only include exceptions that are safe to drop; skipped exceptions result in message loss for that failure case.
+     *
+     * Example:
+     *   'skip_exceptions' => [
+     *       \DomainException::class,
+     *       \InvalidArgumentException::class,
+     *   ],
+     */
+    'skip_exceptions' => [
+        \LogicException::class,
+        \InvalidArgumentException::class,
+        \DomainException::class,
+    ],
 ];

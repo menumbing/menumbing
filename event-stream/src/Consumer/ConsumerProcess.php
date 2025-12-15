@@ -24,6 +24,7 @@ use Menumbing\EventStream\Event\SubscribeFailed;
 use Menumbing\EventStream\EventRegistry;
 use Menumbing\EventStream\Factory\StreamFactory;
 use Psr\Container\ContainerInterface;
+use Throwable;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -60,7 +61,7 @@ abstract class ConsumerProcess extends AbstractProcess
         try {
             $this->stream->createGroup($this->groupName, $this->streamName);
             $this->event?->dispatch(new ConsumerGroupCreated($consumerName, $this->groupName, $this->streamName, $this->driverName));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->event?->dispatch(new ConsumerGroupCreateFailed($consumerName, $this->groupName, $this->streamName, $this->driverName, $e));
             $this->logThrowable($e);
 
@@ -92,7 +93,7 @@ abstract class ConsumerProcess extends AbstractProcess
                 foreach ($messages as $message)  {
                     $this->processMessage($message);
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->event?->dispatch(new SubscribeFailed($consumerName, $this->groupName, $this->streamName, $this->driverName, $e));
                 $this->logThrowable($e);
             }
@@ -118,7 +119,11 @@ abstract class ConsumerProcess extends AbstractProcess
 
                 $this->event?->dispatch(new AfterConsume($consumerName, $this->groupName, $message, $this->stream, $this->driverName));
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
+            if ($this->skipException($e)) {
+                $this->stream->ack($this->groupName, $this->streamName, [$message->id]);
+            }
+
             $this->event?->dispatch(new ConsumeFailed($consumerName, $this->groupName, $message, $this->stream, $this->driverName, $e));
         }
     }
@@ -126,6 +131,25 @@ abstract class ConsumerProcess extends AbstractProcess
     protected function getConsumerName(): string
     {
         return sprintf('%s-%s', $this->streamName, gethostname());
+    }
+
+    protected function skipException(Throwable $e): bool
+    {
+        $skipExceptions = $this->config->get('event_stream.skip_exceptions', []);
+
+        if (empty($skipExceptions)) {
+            return false;
+        }
+
+        foreach ($skipExceptions as $skipException) {
+            if (is_a($e, $skipException, true)
+                || is_subclass_of($e, $skipException)
+                || in_array($skipException, class_implements($e), true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     abstract protected function handler(): callable;
