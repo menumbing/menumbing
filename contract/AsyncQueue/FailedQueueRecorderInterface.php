@@ -14,13 +14,13 @@ interface FailedQueueRecorderInterface
 {
     public function record(string $id, string $pool, string $payload, Throwable $exception): void;
 
-    public function all(?string $pool = null): Generator;
+    public function all(?string $pool = null, array $criteria = []): Generator;
 
-    public function count(?string $pool = null): int;
+    public function count(?string $pool = null, array $criteria = []): int;
 
     public function find(string $id): ?object;
 
     public function forget(string $id): bool;
 
-    public function flush(?string $pool = null): int;
+    public function flush(?string $pool = null, array $criteria = []): int;
 }
