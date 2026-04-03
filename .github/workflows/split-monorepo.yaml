@@ -47,6 +47,8 @@ jobs:
             split_repository: 'exception'
           - local_path: 'oauth2-resource-server'
             split_repository: 'oauth2-resource-server'
+          - local_path: 'graceful-process'
+            split_repository: 'graceful-process'
 
     steps:
       - uses: actions/checkout@v2
