@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Menumbing\HealthCheck\Checker;
 
+use Hyperf\Amqp\ConnectionFactory;
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\Redis\RedisFactory;
 use Menumbing\Contract\HealthCheck\CheckerInterface;
 use Menumbing\Contract\HealthCheck\ResultInterface;
 use Menumbing\HealthCheck\Result;
@@ -14,18 +14,18 @@ use Psr\Container\ContainerInterface;
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
-final class RedisChecker implements CheckerInterface
+final class AmqpChecker implements CheckerInterface
 {
-    const CHECKER_NAME = 'redis';
+    const CHECKER_NAME = 'amqp';
 
     #[Inject]
     protected ContainerInterface $container;
 
     public function __construct()
     {
-        if (! class_exists(RedisFactory::class)) {
+        if (! class_exists(ConnectionFactory::class)) {
             throw new \RuntimeException(
-                'The "hyperf/redis" package is required to use RedisChecker. Please install it via: composer require hyperf/redis'
+                'The "hyperf/amqp" package is required to use AmqpChecker. Please install it via: composer require hyperf/amqp'
             );
         }
     }
@@ -40,25 +40,15 @@ final class RedisChecker implements CheckerInterface
         $pool = $options['pool'] ?? 'default';
 
         try {
-            $redis = $this->container->get(RedisFactory::class)->get($pool);
-            $pong = $redis->ping();
+            $connection = $this->container->get(ConnectionFactory::class)->getConnection($pool);
 
-            if ($this->isValidPingResponse($pong)) {
-                return new Result(self::CHECKER_NAME, true, 'Redis connection is OK');
+            if ($connection->isConnected()) {
+                return new Result(self::CHECKER_NAME, true, 'AMQP connection is OK');
             }
 
-            return new Result(self::CHECKER_NAME, false, 'Unexpected Redis ping result: ' . $pong);
+            return new Result(self::CHECKER_NAME, false, 'AMQP connection is not connected');
         } catch (\Throwable $e) {
             return new Result(self::CHECKER_NAME, false, $e->getMessage());
         }
-    }
-
-    private function isValidPingResponse(string|bool $response): bool
-    {
-        if (true === $response) {
-            return true;
-        }
-
-        return in_array(strtolower($response), ['+pong', 'pong'], true);
     }
 }
