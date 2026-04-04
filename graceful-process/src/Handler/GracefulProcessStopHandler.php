@@ -36,6 +36,7 @@ class GracefulProcessStopHandler implements SignalHandlerInterface
     {
         return [
             [self::PROCESS, SIGTERM],
+            [self::PROCESS, SIGINT],
         ];
     }
 
