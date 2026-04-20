@@ -15,6 +15,7 @@ namespace Menumbing\GracefulProcess\Handler;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Signal\Annotation\Signal;
 use Hyperf\Signal\SignalHandlerInterface;
+use Hyperf\Signal\SignalManager;
 use Menumbing\GracefulProcess\GracefulShutdownCollector;
 use Psr\Container\ContainerInterface;
 use Swoole\Coroutine;
@@ -58,12 +59,14 @@ class GracefulWorkerStopHandler implements SignalHandlerInterface
 
     public function handle(int $signal): void
     {
-        // If SIGINT arrives while shutdown is already in progress, force-stop
-        // immediately. This covers two scenarios:
-        //  - Internal SIGINT sent by the counter when all processes are done
-        //  - User pressing Ctrl+C a second time (force quit)
+        // If SIGINT arrives while shutdown is already in progress, ignore it.
+        // The SIGTERM handler is already draining in-flight requests via the
+        // connection_num polling loop. Calling $server->stop() here would
+        // kill connections immediately (race condition when Ctrl+C sends
+        // SIGINT to entire process group and it reaches Worker#0 before
+        // the drain completes). Force-quit is handled by the forwarder
+        // (second Ctrl+C → SIGKILL to process group).
         if ($signal === SIGINT && GracefulShutdownCollector::isShutdownRequested()) {
-            $this->container->get(Server::class)->stop();
             return;
         }
 
@@ -78,6 +81,14 @@ class GracefulWorkerStopHandler implements SignalHandlerInterface
         register_shutdown_function(function () {
             GracefulShutdownCollector::unregisterProcess();
         });
+
+        // Tell Hyperf's signal loop to stop. Other signal coroutines
+        // (e.g. SIGINT waitSignal) will exit when their current
+        // waitSignal() call times out (up to 5s), preventing Swoole's
+        // "all coroutines are sleeping - Loss deadlock" error.
+        if ($this->container->has(SignalManager::class)) {
+            $this->container->get(SignalManager::class)->setStopped(true);
+        }
 
         $server = $this->container->get(Server::class);
         $config = $this->container->get(ConfigInterface::class);
@@ -96,6 +107,12 @@ class GracefulWorkerStopHandler implements SignalHandlerInterface
             }
             Coroutine::sleep(0.5);
         }
+
+        // Disable deadlock check — signal coroutines from Hyperf's
+        // SignalManager are intentionally left sleeping (they will be
+        // cleaned up when the worker process exits). Without this,
+        // Swoole logs "all coroutines are asleep - deadlock!" errors.
+        Coroutine::set(['enable_deadlock_check' => false]);
 
         $server->stop();
     }

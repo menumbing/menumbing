@@ -6,11 +6,12 @@ Instead of relying on fixed timeouts, this package monitors actual process and r
 
 ## Features
 
-- **Process-aware shutdown** — tracks custom processes and HTTP workers via shared-memory counters; exits immediately when all are done
+- **Non-invasive** — works with existing custom processes without code changes; blocking operations (sleep, I/O, message consumption) complete naturally
 - **HTTP request protection** — in-flight requests complete normally; new requests receive `503 Service Unavailable` during shutdown
-- **Custom process support** — wrap your process loop with `runGracefully()` to ensure the current unit of work finishes before exit
+- **Process-aware shutdown** — tracks custom processes and HTTP workers via shared-memory counters; exits immediately when all are done
+- **SIGINT support** — Ctrl+C triggers the same graceful shutdown as SIGTERM via a dedicated signal forwarder process
 - **Early signal handling** — catches SIGTERM and SIGINT arriving during application bootstrap (before Swoole's handlers are registered)
-- **SIGINT support** — Ctrl+C and `kill -INT` trigger the same graceful shutdown as SIGTERM
+- **Clean logs** — suppresses Swoole's noisy shutdown diagnostics (deadlock warnings, ReactorKqueue errors, ExitException)
 - **Zero configuration** — works out of the box with sensible defaults
 
 ## Requirements
@@ -18,6 +19,7 @@ Instead of relying on fixed timeouts, this package monitors actual process and r
 - PHP >= 8.1
 - Hyperf >= 3.1
 - Swoole (SWOOLE_BASE mode)
+- ext-ffi (recommended, for clean process exit and inherited socket cleanup)
 
 ## Installation
 
@@ -43,15 +45,15 @@ return [
      * Swoole's C-level max_wait_time is set to this value. If any process
      * is stuck, Swoole force-kills it after this duration.
      *
-     * In normal operation, the package sends SIGINT well before this
-     * timeout expires, so the actual shutdown is much faster.
+     * This should be set to at least the longest expected blocking operation
+     * duration in your custom processes.
      *
      * Docker's stop_grace_period (or Kubernetes terminationGracePeriodSeconds)
      * must be >= this value.
      *
      * Default: 300 seconds (5 minutes)
      */
-    'timeout' => (int) \Hyperf\Support\env('GRACEFUL_PROCESS_TIMEOUT', 300),
+    'timeout' => (int) env('GRACEFUL_PROCESS_TIMEOUT', 300),
 
     /*
      * Maximum time in seconds that HTTP workers wait for in-flight
@@ -67,7 +69,7 @@ return [
      *
      * Defaults to 'timeout' if not set.
      */
-    // 'max_wait_time' => 60,
+    'max_wait_time' => (int) env('GRACEFUL_PROCESS_MAX_WAIT_TIME', 30),
 ];
 ```
 
@@ -91,9 +93,56 @@ spec:
 
 ## Usage
 
+### HTTP Requests
+
+HTTP requests are protected automatically — no code changes needed.
+
+When SIGTERM or SIGINT arrives:
+
+1. In-flight requests continue and complete normally
+2. New requests receive `503 Service Unavailable` with a `Retry-After: 5` header
+3. Workers exit as soon as all active requests finish
+
 ### Custom Processes
 
-Use the `GracefulShutdown` trait and wrap your work loop with `runGracefully()`:
+Custom processes work out of the box **without any code changes**. When shutdown is triggered:
+
+1. `ProcessManager::isRunning()` returns `false` on the next loop check
+2. The current blocking operation (sleep, I/O, message consumption) finishes naturally
+3. The process exits cleanly
+
+```php
+<?php
+
+namespace App\Process;
+
+use Hyperf\Process\AbstractProcess;
+use Hyperf\Process\Annotation\Process;
+use Hyperf\Process\ProcessManager;
+
+#[Process(name: 'consumer')]
+class ConsumerProcess extends AbstractProcess
+{
+    public function handle(): void
+    {
+        while (ProcessManager::isRunning()) {
+            $this->processMessage();
+        }
+    }
+
+    private function processMessage(): void
+    {
+        // Your message processing logic (e.g., consume from queue).
+        // This can include blocking operations like sleep(), HTTP calls,
+        // database queries, etc. The current call will ALWAYS complete
+        // before the process exits — even during shutdown.
+    }
+}
+```
+
+### Optional: GracefulShutdown Trait
+
+For additional control, you can use the `GracefulShutdown` trait with `runGracefully()`. This registers a completion channel that `GracefulProcessStopHandler` blocks on, ensuring the callback finishes before the process exits:
 
 ```php
 <?php
@@ -121,77 +170,85 @@ class ConsumerProcess extends AbstractProcess
 
     private function processMessage(): void
     {
-        // Your message processing logic.
-        // The current iteration will always complete before
-        // the process exits — even during shutdown.
+        // The current iteration will always complete before exit.
     }
 }
 ```
-
-When SIGTERM or SIGINT arrives:
-
-1. `ProcessManager::isRunning()` returns `false` on the next check
-2. The current `processMessage()` call finishes completely
-3. The process exits cleanly
-
-### HTTP Requests
-
-HTTP requests are protected automatically — no code changes needed.
-
-When SIGTERM or SIGINT arrives:
-
-1. In-flight requests continue and complete normally
-2. New requests receive `503 Service Unavailable` with a `Retry-After: 5` header
-3. Workers exit as soon as all active requests finish
 
 ## How It Works
 
 ### Shutdown Flow (SWOOLE_BASE mode)
 
+#### Host (Ctrl+C / SIGINT) Path
+
 ```
-SIGTERM or SIGINT arrives
+Ctrl+C
   |
-  +-- (SIGINT at master level)
-  |     -> Swoole\Process::signal converts to $server->shutdown()
-  |     -> Triggers same SIGTERM flow below
+  +-- SIGINT sent to entire process group
+  |
+  +-- All Swoole processes have SIGINT blocked (sigprocmask)
+  |     -> SIGINT is silently ignored in master, workers, custom processes
+  |
+  +-- Signal forwarder (dedicated child process, SIGINT unblocked):
+  |   1. Catches SIGINT
+  |   2. Sets shared shutdown flag (Swoole\Atomic)
+  |   3. Sends SIGTERM to master process
+  |   (Second Ctrl+C → SIGKILL to entire process group)
+  |
+  +-- Master receives SIGTERM → Swoole cascades to all processes
   |
   +-- Workers (GracefulWorkerStopHandler):
-  |   1. Set shared shutdown flag (Swoole\Atomic)
-  |   2. Register in process counter
-  |   3. GracefulShutdownMiddleware starts returning 503
-  |   4. Poll connection_num until all requests finish
-  |   5. $server->stop() -> worker exits
-  |   6. Shutdown function: unregister from counter
+  |   1. Set shared shutdown flag
+  |   2. GracefulShutdownMiddleware starts returning 503
+  |   3. Poll connection_num until all in-flight requests finish
+  |   4. $server->stop() → worker exits
   |
   +-- Custom Processes (ShutdownWatcherListener):
-  |   1. Detect shutdown flag via timer poll
+  |   1. Detect shutdown flag via 500ms timer
   |   2. Set ProcessManager::setRunning(false)
-  |   3. Close recv() socket to interrupt blocked I/O
-  |   4. Wait for runGracefully() callback to complete
-  |   5. Process exits naturally
-  |   6. Shutdown function: unregister from counter
+  |   3. Current blocking operation completes naturally
+  |   4. Process exits when handle() returns
   |
-  +-- When counter reaches 0:
-      -> SIGINT sent to master process
-      -> Interrupts Swoole's C-level hard sleep
-      -> Container exits immediately
+  +-- When process counter reaches 0:
+        -> SIGINT sent to master
+        -> Interrupts Swoole's internal wait
+        -> Server exits immediately
+```
+
+#### Docker (SIGTERM) Path
+
+```
+docker stop / kill -TERM
+  |
+  +-- SIGTERM sent to PID 1 (Worker#0 in BASE mode)
+  |
+  +-- Swoole's C-level SIGTERM handler triggers shutdown
+  |
+  +-- Same flow as above (workers drain, custom processes finish)
+  |
+  +-- Signal forwarder cleaned up via onShutdown callback
 ```
 
 ### Signal Handling
 
 | Signal | Source | Behavior |
 |--------|--------|----------|
-| SIGTERM | `docker stop` / `kill` | Graceful shutdown |
-| SIGINT (1st) | Ctrl+C / `kill -INT` | Converted to `$server->shutdown()` at master level |
-| SIGINT (2nd) | Double Ctrl+C | Workers force-stop immediately |
-| SIGINT (internal) | Process counter = 0 | Master exits immediately |
+| SIGTERM | `docker stop` / `kill` | Graceful shutdown via Swoole's C-level handler |
+| SIGINT (1st) | Ctrl+C / `kill -INT` | Caught by forwarder → converted to SIGTERM |
+| SIGINT (2nd) | Double Ctrl+C | Forwarder sends SIGKILL to process group |
+| SIGINT (internal) | Process counter = 0 | Master exits immediately (interrupts Swoole wait) |
 
 ### Key Mechanisms
 
-- **Swoole\Atomic (shared memory)** — cross-process shutdown flag and process counter, inherited by all children via `fork()`
-- **Process counter** — tracks alive workers + custom processes; SIGINT fires only when ALL reach zero
-- **Socket close** — interrupts `AbstractProcess::listen()` blocked `recv()` call, eliminating the ~5-10s poll gap
-- **Connection polling** — workers monitor `connection_num` and exit as soon as in-flight requests finish (no fixed sleep)
+- **`pcntl_sigprocmask(SIG_BLOCK, [SIGINT])`** — blocks SIGINT at kernel level in all Swoole processes. Cannot be overridden by Swoole's `sigaction()`. Prevents Swoole's C-level SIGINT handler from calling `swoole_event_exit()` which would kill in-flight connections.
+- **Signal forwarder process** — a dedicated child that unblocks SIGINT, catches Ctrl+C, and translates it to SIGTERM for the master. Avoids the need for `Process::signal()` which conflicts with `waitSignal()` in workers.
+- **`AfterWorkerStart` re-block** — re-applies `pcntl_signal(SIGINT, SIG_IGN)` and `pcntl_sigprocmask(SIG_BLOCK, [SIGINT])` after Swoole's worker initialization, preventing race conditions where pending SIGINT could fire during SIGTERM processing.
+- **`Swoole\Atomic` (shared memory)** — cross-process shutdown flag and process counter, inherited by all children via `fork()`.
+- **Process counter** — tracks alive workers + custom processes; SIGINT fires to master only when ALL reach zero.
+- **Connection polling** — workers monitor `connection_num` and exit as soon as in-flight requests finish (no fixed sleep).
+- **`enable_deadlock_check => false`** — disables Swoole's false-positive deadlock detection during shutdown (Hyperf's SignalManager coroutines are intentionally left sleeping).
+- **`log_level => SWOOLE_LOG_ERROR`** — suppresses Swoole WARNING-level logs (ReactorKqueue fd re-registration) during shutdown.
+- **FFI `_exit(0)`** — avoids `Swoole\ExitException` from PHP's `exit()` in the forwarder process.
 
 ## License
 

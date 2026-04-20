@@ -26,7 +26,7 @@ class GracefulShutdownMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (GracefulShutdownCollector::isShutdownRequested()) {
-            return new \Hyperf\HttpMessage\Server\Response()
+            return (new \Hyperf\HttpMessage\Server\Response())
                 ->withStatus(503)
                 ->withAddedHeader('Retry-After', '5')
                 ->withAddedHeader('Connection', 'close');
