@@ -17,6 +17,7 @@ use Hyperf\Signal\Annotation\Signal;
 use Hyperf\Signal\SignalHandlerInterface;
 use Hyperf\Signal\SignalManager;
 use Menumbing\GracefulProcess\GracefulShutdownCollector;
+use Menumbing\GracefulProcess\Listener\ShutdownWatcherListener;
 use Psr\Container\ContainerInterface;
 use Swoole\Coroutine;
 use Swoole\Server;
@@ -28,16 +29,19 @@ use Swoole\Server;
  *
  * On SIGTERM or external SIGINT (e.g., Ctrl+C):
  *  1. Sets the shared shutdown flag (for custom processes)
- *  2. Registers this worker in the process counter
- *  3. New requests are rejected by GracefulShutdownMiddleware (503)
+ *  2. SWOOLE_BASE: closes listening socket fds — new connections get
+ *     "connection refused" at TCP level
+ *     SWOOLE_PROCESS: new requests are rejected by GracefulShutdownMiddleware
+ *     with 503 (master reactor still accepts TCP, worker returns 503)
+ *  3. Registers this worker in the process counter
  *  4. Polls connection count — exits as soon as in-flight requests finish
  *  5. Safety timeout (max_wait_time) force-stops if requests hang
  *  6. Worker exits -> shutdown function -> unregisters from counter
  *  7. When counter reaches 0, SIGINT is sent to master
  *
  * On internal SIGINT (shutdown already in progress):
- *  - Calls $server->stop() immediately (interrupts Swoole's hard sleep)
- *  - Also triggered by a second Ctrl+C (force quit)
+ *  - Returns immediately (drain loop handles shutdown)
+ *  - Force-quit handled by forwarder (second Ctrl+C -> SIGKILL)
  *
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
@@ -91,13 +95,29 @@ class GracefulWorkerStopHandler implements SignalHandlerInterface
         }
 
         $server = $this->container->get(Server::class);
+
+        // In SWOOLE_BASE mode, each worker does its own accept() on the
+        // listening socket. Closing the fd ensures no new TCP connections
+        // arrive (connection refused). In SWOOLE_PROCESS mode, the master
+        // reactor handles accept() — closing the inherited fd in workers
+        // can interfere with Swoole's internal connection tracking and
+        // break in-flight request handling. In PROCESS mode, new requests
+        // are rejected by GracefulShutdownMiddleware (503) instead.
+        if ($server->mode === SWOOLE_BASE) {
+            foreach ($server->ports as $port) {
+                if (($fd = $port->sock) > 0) {
+                    ShutdownWatcherListener::closeFd($fd);
+                }
+            }
+        }
+
         $config = $this->container->get(ConfigInterface::class);
         $timeout = (int) $config->get('graceful_process.timeout', 300);
         $maxWaitTime = (int) $config->get('graceful_process.max_wait_time', $timeout);
 
         // Poll until all in-flight requests complete (connection_num == 0)
-        // or max_wait_time expires. New requests arriving during this period
-        // are rejected with 503 by GracefulShutdownMiddleware.
+        // or max_wait_time expires. New requests are rejected by either
+        // connection refused (BASE) or 503 middleware (PROCESS).
         // Coroutine::sleep yields to the event loop, allowing HTTP handler
         // coroutines to continue running.
         $deadline = time() + $maxWaitTime;

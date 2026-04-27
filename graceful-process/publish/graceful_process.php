@@ -25,11 +25,13 @@ return [
      * Maximum time in seconds that HTTP workers wait for in-flight
      * requests to complete before force-stopping.
      *
-     * After SIGTERM/SIGINT, each worker immediately stops accepting new requests
-     * (responds with 503) and monitors active connections. The worker
-     * exits as soon as all in-flight requests finish. This value is only
-     * a safety cap — if a request is stuck or takes too long, the worker
-     * will be force-stopped after this duration.
+     * After SIGTERM/SIGINT, each worker rejects new requests and monitors
+     * active connections. In SWOOLE_BASE mode, workers close their
+     * listening socket (new connections get "connection refused" at TCP
+     * level). In SWOOLE_PROCESS mode, new requests get 503 via middleware.
+     * The worker exits as soon as all in-flight requests finish. This
+     * value is only a safety cap — if a request is stuck or takes too
+     * long, the worker will be force-stopped after this duration.
      *
      * Set this to at least your longest expected HTTP request duration.
      *

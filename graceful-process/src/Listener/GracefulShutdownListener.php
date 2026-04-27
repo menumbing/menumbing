@@ -17,6 +17,7 @@ use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\AfterWorkerStart;
 use Hyperf\Framework\Event\BeforeMainServerStart;
 use Hyperf\Framework\Event\OnManagerStart;
+use Hyperf\Framework\Event\OnStart;
 use Hyperf\Process\ProcessCollector;
 use Menumbing\GracefulProcess\GracefulShutdownCollector;
 use Swoole\Constant;
@@ -25,34 +26,8 @@ use Swoole\Process;
 /**
  * Configures Swoole for graceful process-aware shutdown.
  *
- * Shutdown flow in SWOOLE_BASE mode:
- *
- * Host (Ctrl+C) path:
- *  1. Ctrl+C sends SIGINT to the entire process group
- *  2. SIGINT is blocked at kernel level via sigprocmask in all Swoole
- *     processes (master, workers, custom processes). This prevents
- *     Swoole's C-level SIGINT handler from calling swoole_event_exit()
- *     which would kill in-flight connections immediately.
- *  3. A dedicated signal forwarder process (which unblocks SIGINT)
- *     catches it, sets the shared shutdown flag, sends SIGTERM to master
- *  4. SIGTERM arrives at master - Swoole's C-level handler coordinates
- *     shutdown with manager (prevents reload loop)
- *  5. Manager cascades SIGTERM to all workers and custom processes
- *  6. GracefulWorkerStopHandler catches SIGTERM via waitSignal() in ALL
- *     workers (including Worker#0), polls connection_num (allowing
- *     in-flight HTTP to finish), then stops
- *  7. Custom processes detect shutdown via ShutdownWatcherListener timer
- *  8. Second Ctrl+C force-kills the process group (SIGKILL)
- *
- * Docker (SIGTERM) path:
- *  1. Docker sends SIGTERM to PID 1 (Worker#0 in BASE mode)
- *  2. Swoole's C-level SIGTERM handler triggers proper shutdown for PID 1
- *  3. Workers 1-N receive SIGTERM -> GracefulWorkerStopHandler -> drain
- *  4. onShutdown fires, forwarder cleaned up
- *
- * IMPORTANT: No Process::signal() calls are registered anywhere. This
- * ensures waitSignal() works in ALL workers including Worker#0, allowing
- * GracefulWorkerStopHandler to properly drain in-flight HTTP requests.
+ * Supports both SWOOLE_BASE and SWOOLE_PROCESS modes. The package
+ * auto-detects the server mode and adjusts SIGINT protection accordingly.
  *
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
  */
@@ -73,11 +48,114 @@ class GracefulShutdownListener implements ListenerInterface
             BeforeMainServerStart::class,
             OnManagerStart::class,
             AfterWorkerStart::class,
+            OnStart::class,
         ];
     }
 
     public function process(object $event): void
     {
+        if ($event instanceof OnStart) {
+            // SWOOLE_PROCESS only: re-block SIGINT in the master process
+            // after Swoole's swServer_signal_init. In PROCESS mode, the
+            // master is a separate reactor process (not Worker#0), so
+            // AfterWorkerStart doesn't protect it. OnStart only fires
+            // in PROCESS mode — this is a no-op in BASE mode.
+            pcntl_signal(SIGINT, SIG_IGN);
+            pcntl_sigprocmask(SIG_BLOCK, [SIGINT]);
+
+            // Override Swoole's C-level SIGTERM handler in the master process.
+            //
+            // Problem: Swoole's default SIGTERM handler calls swoole_event_exit()
+            // which immediately stops the reactor event loop. In SWOOLE_PROCESS,
+            // the master reactor manages all TCP connections and forwards
+            // responses from workers via pipes. When the reactor exits, active
+            // TCP connections are closed — clients get "empty reply" even though
+            // workers are still processing in-flight requests.
+            //
+            // Fix: use pcntl_signal() to override the handler via sigaction()
+            // (last call wins, installed after Swoole's swServer_signal_init).
+            // We keep the reactor alive during worker drain, only exiting
+            // after the manager exits (= all workers done). Custom processes
+            // are cleaned up by Swoole's shutdown sequence after Event::exit().
+            //
+            // Note: Process::signal() cannot be used in OnStart — it requires
+            // the Swoole event loop which isn't running yet. pcntl_signal()
+            // works because it uses sigaction() directly.
+            $server = $event->server;
+            $timeout = (int) $this->config->get(
+                'graceful_process.timeout',
+                self::DEFAULT_TIMEOUT,
+            );
+
+            $shuttingDown = false;
+
+            pcntl_async_signals(true);
+
+            pcntl_signal(SIGTERM, function () use (&$shuttingDown, $server, $timeout) {
+                if ($shuttingDown) {
+                    return;
+                }
+                $shuttingDown = true;
+
+                GracefulShutdownCollector::requestShutdown();
+
+                // Close listening socket — no new TCP connections accepted.
+                foreach ($server->ports as $port) {
+                    if (($fd = $port->sock) > 0) {
+                        ShutdownWatcherListener::closeFd($fd);
+                    }
+                }
+
+                // Forward SIGTERM to manager, which cascades to workers.
+                // GracefulWorkerStopHandler in workers will drain in-flight
+                // requests via connection_num polling before stopping.
+                if ($server->manager_pid > 0) {
+                    posix_kill($server->manager_pid, SIGTERM);
+                }
+
+                // Poll until all processes finish. The reactor stays alive
+                // during this period, forwarding responses from worker pipes
+                // to client TCP connections.
+                //
+                // Exit condition (OR, not AND):
+                //  - Manager dead: all workers + custom processes exited.
+                //    Reliable in Docker (init reaps zombies) but on bare
+                //    hosts the manager becomes a zombie and posix_kill
+                //    still returns true.
+                //  - Custom process counter at 0: all custom processes
+                //    exited via the flag mechanism. Workers typically finish
+                //    before custom processes (HTTP drain is seconds, custom
+                //    work is longer). Fallback for the zombie case.
+                //  - Deadline: safety net.
+                $deadline = time() + $timeout;
+                $managerPid = $server->manager_pid;
+
+                \Swoole\Timer::tick(500, function (int $timerId) use ($managerPid, $deadline) {
+                    $managerAlive = $managerPid > 0 && @posix_kill($managerPid, 0);
+                    $customAlive = GracefulShutdownCollector::getCustomProcessCount() > 0;
+
+                    if (!$managerAlive || !$customAlive || time() >= $deadline) {
+                        \Swoole\Timer::clear($timerId);
+                        \Swoole\Event::exit();
+                    }
+                });
+            });
+
+            // Ensure pcntl_signal callbacks are dispatched during the C
+            // reactor loop. The master reactor is C code — PHP signal
+            // callbacks only fire during Zend VM execution. This timer
+            // gives the VM regular opportunities to dispatch pending
+            // signals (at most 100ms delay from signal arrival).
+            \Swoole\Timer::tick(100, function (int $timerId) use (&$shuttingDown) {
+                pcntl_signal_dispatch();
+                if ($shuttingDown) {
+                    \Swoole\Timer::clear($timerId);
+                }
+            });
+
+            return;
+        }
+
         if ($event instanceof AfterWorkerStart) {
             // Override Swoole's C-level SIGINT handler with SIG_IGN after the
             // server has started each worker. Swoole installs its own SIGINT
@@ -174,7 +252,7 @@ class GracefulShutdownListener implements ListenerInterface
 
             if ($forwarderPid > 0) {
                 @posix_kill($forwarderPid, SIGTERM);
-                pcntl_waitpid($forwarderPid, $status, WNOHANG);
+                @pcntl_waitpid($forwarderPid, $status, WNOHANG);
             }
         });
     }

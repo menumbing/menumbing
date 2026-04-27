@@ -48,6 +48,14 @@ class GracefulShutdownCollector
     protected static ?Atomic $processCounter = null;
 
     /**
+     * Separate counter for custom processes only, used by SWOOLE_PROCESS
+     * master to know when all custom processes have exited. The main
+     * processCounter also includes workers (which don't reliably
+     * unregister in SWOOLE_PROCESS mode on Linux).
+     */
+    protected static ?Atomic $customProcessCounter = null;
+
+    /**
      * Master process PID, saved before fork so children can signal it.
      */
     protected static int $masterPid = 0;
@@ -100,7 +108,16 @@ class GracefulShutdownCollector
     public static function initProcessCounter(int $masterPid): void
     {
         static::$processCounter = new Atomic(0);
+        static::$customProcessCounter = new Atomic(0);
         static::$masterPid = $masterPid;
+    }
+
+    /**
+     * Get the current process count (number of alive registered processes).
+     */
+    public static function getProcessCount(): int
+    {
+        return static::$processCounter?->get() ?? 0;
     }
 
     /**
@@ -109,6 +126,24 @@ class GracefulShutdownCollector
     public static function registerProcess(): void
     {
         static::$processCounter?->add(1);
+    }
+
+    /**
+     * Register a custom process in the dedicated custom process counter.
+     * Used by SWOOLE_PROCESS master to track custom process completion
+     * independently from workers.
+     */
+    public static function registerCustomProcess(): void
+    {
+        static::$customProcessCounter?->add(1);
+    }
+
+    /**
+     * Get the number of alive custom processes (dedicated counter).
+     */
+    public static function getCustomProcessCount(): int
+    {
+        return static::$customProcessCounter?->get() ?? 0;
     }
 
     /**
@@ -125,6 +160,7 @@ class GracefulShutdownCollector
         }
 
         $remaining = static::$processCounter->sub(1);
+        static::$customProcessCounter?->sub(1);
 
         if ($remaining === 0 && static::isShutdownRequested() && static::$masterPid > 0) {
             posix_kill(static::$masterPid, SIGINT);

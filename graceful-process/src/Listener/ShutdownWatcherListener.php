@@ -65,8 +65,27 @@ class ShutdownWatcherListener implements ListenerInterface
         // rapid restarts during graceful shutdown.
         $this->closeInheritedServerSocket();
 
-        // Track this process in the shared counter
+        // Override Swoole's C-level SIGTERM handler. The manager forwards
+        // SIGTERM to all custom processes during shutdown. Swoole's default
+        // handler calls swoole_event_exit() -> _exit(), which skips PHP
+        // shutdown functions entirely (counter never decrements).
+        //
+        // By installing a PHP callback via pcntl_signal() (which uses
+        // sigaction, overriding Swoole's handler), we:
+        //  1. Prevent _exit() — the process stays alive
+        //  2. Set the shutdown flag — critical for SWOOLE_BASE where no
+        //     other process sets it before SIGTERM reaches custom processes
+        //
+        // In SWOOLE_PROCESS, the master already sets the flag before the
+        // manager forwards SIGTERM, so this is a harmless redundant set.
+        // In SWOOLE_BASE, this is the PRIMARY mechanism for flag propagation.
+        pcntl_signal(SIGTERM, function () {
+            GracefulShutdownCollector::requestShutdown();
+        });
+
+        // Track this process in the shared counters
         GracefulShutdownCollector::registerProcess();
+        GracefulShutdownCollector::registerCustomProcess();
 
         // Decrement counter when this process exits. If it's the last
         // process during shutdown, this triggers SIGINT to the master.
@@ -74,8 +93,13 @@ class ShutdownWatcherListener implements ListenerInterface
             GracefulShutdownCollector::unregisterProcess();
         });
 
-        // Poll for shutdown flag every 500ms
+        // Poll for shutdown flag every 500ms. Also dispatch pending
+        // pcntl signals — since pcntl_async_signals is false (inherited
+        // from the parent process), the SIGTERM handler above only fires
+        // when explicitly dispatched.
         Timer::tick(500, function (int $timerId) use ($abstractProcess) {
+            pcntl_signal_dispatch();
+
             if (GracefulShutdownCollector::isShutdownRequested()) {
                 ProcessManager::setRunning(false);
 
