@@ -18,6 +18,12 @@ return [
     'group_name' => env('APP_NAME', 'menumbing'),
 
     /**
+     * Debug mode configuration.
+     * When enabled, it provides additional logging and information for debugging purposes.
+     */
+    'debug' => true,
+
+    /**
      * Available stream drivers configuration.
      * Each driver defines how messages are published and consumed.
      * You can configure multiple drivers with different settings.
