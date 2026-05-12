@@ -59,8 +59,6 @@ class TraceMiddleware implements MiddlewareInterface
             );
 
             $this->buildResponseSpan($span, $response);
-
-            throw $exception;
         } finally {
             if ($traceId = TracerContext::getTraceId()) {
                 $response = $response->withHeader('Trace-Id', $traceId);
