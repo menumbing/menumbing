@@ -40,6 +40,10 @@ class TraceHttpClientMiddleware implements MiddlewareInterface
 
                 $span->setTag('server.address', $request->getUri()->getHost());
 
+                if (isset($options['client_name'])) {
+                    $span->setTag('http.client_name', $options['client_name']);
+                }
+
                 $this->appendRequestSpanTags($span, $request, $options);
 
                 /** @var PromiseInterface $response */
