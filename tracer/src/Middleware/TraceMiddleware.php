@@ -40,6 +40,11 @@ class TraceMiddleware implements MiddlewareInterface
         /** @var Dispatched $dispatched */
         $dispatched = $request->getAttribute(Dispatched::class);
 
+        $route = $dispatched->handler?->route;
+        if ($this->isRouteExcluded($route)) {
+            return $handler->handle($request);
+        }
+
         $tracer = TracerContext::getTracer();
         $span = $this->buildRequestSpan($request, $dispatched);
 
@@ -119,5 +124,32 @@ class TraceMiddleware implements MiddlewareInterface
         }
 
         return $span;
+    }
+
+    protected function isRouteExcluded(?string $route): bool
+    {
+        if ($route === null) {
+            return false;
+        }
+
+        $excludedRoutes = $this->config->get('opentracing.excluded_routes', []);
+
+        foreach ($excludedRoutes as $pattern) {
+            if ($this->matchesPattern($route, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function matchesPattern(string $route, string $pattern): bool
+    {
+        $pattern = preg_replace('/\{[^}]+\}/', '[^/]+', $pattern);
+        $pattern = str_replace('/', '\\/', $pattern);
+        $pattern = str_replace('*', '.*', $pattern);
+        $fullPattern = '/^' . $pattern . '$/';
+
+        return (bool) preg_match($fullPattern, $route);
     }
 }
