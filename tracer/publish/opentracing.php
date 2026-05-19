@@ -37,6 +37,12 @@ return [
         'ignore_exceptions' => [],
         'trace_methods' => [],
     ],
+    'excluded_routes' => [
+        // Example: '/health',
+        // Example: '/api/v1/users/{id}',
+        // Example: '/metrics*',
+        '/health*',
+    ],
     'tracer' => [
         'zipkin' => [
             'driver' => Menumbing\Tracer\Adapter\ZipkinTracerFactory::class,
