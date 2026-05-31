@@ -11,7 +11,7 @@ use Exception;
  */
 class UnknownStreamDriverException extends Exception
 {
-    public function __construct(string $driverName, int $code = 0, Exception $previous = null)
+    public function __construct(string $driverName, int $code = 0, ?Exception $previous = null)
     {
         parent::__construct(
             sprintf('Driver "%s" is not found. Please make sure config "event_stream.drivers.%s" is exists.', $driverName, $driverName),

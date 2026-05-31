@@ -28,13 +28,15 @@ class ConsumerFactory
 
     public function get(string $poolName, array $options): Consumer
     {
-        if (null !== $consumer = $this->consumers[$poolName] ?? null) {
+        $cacheKey = $this->getCacheKey($poolName, $options);
+
+        if (null !== $consumer = $this->consumers[$cacheKey] ?? null) {
             return $consumer;
         }
 
         $consumer = new Consumer($this->getConfig($poolName, $options));
 
-        $this->consumers[$poolName] = $consumer;
+        $this->consumers[$cacheKey] = $consumer;
 
         return $consumer;
     }
@@ -52,8 +54,13 @@ class ConsumerFactory
         $consumerConfig->setTopic($options['topic']);
         $consumerConfig->setRebalanceTimeout($config['rebalance_timeout']);
         $consumerConfig->setSendTimeout($config['send_timeout']);
-        $consumerConfig->setGroupId($options['group_id'] ?? uniqid('hyperf-kafka-'));
-        $consumerConfig->setGroupInstanceId(sprintf('%s-%s', $options['group_id'], uniqid()));
+        $groupId = $options['group_id'] ?? uniqid('hyperf-kafka-');
+
+        $consumerConfig->setGroupId($groupId);
+        $instanceId = $options['consumer_name'] ?? gethostname();
+        $consumerConfig->setGroupInstanceId(
+            sprintf('%s-%s-%s', $groupId, implode('_', (array) ($options['topic'] ?? [])), $instanceId)
+        );
         $consumerConfig->setMemberId($options['member_id'] ?? '');
         $consumerConfig->setInterval($config['interval']);
         $consumerConfig->setBootstrapServers($config['bootstrap_servers']);
@@ -71,10 +78,24 @@ class ConsumerFactory
         $consumerConfig->setOffsetRetry($config['offset_retry']);
         $consumerConfig->setAutoCreateTopic($config['auto_create_topic']);
         $consumerConfig->setPartitionAssignmentStrategy($config['partition_assignment_strategy']);
+        isset($config['min_bytes']) && $consumerConfig->setMinBytes($config['min_bytes']);
+        isset($config['max_wait']) && $consumerConfig->setMaxWait($config['max_wait']);
         ! empty($config['sasl']) && $consumerConfig->setSasl($config['sasl']);
         ! empty($config['ssl']) && $consumerConfig->setSsl($config['ssl']);
         is_callable($config['exception_callback'] ?? null) && $consumerConfig->setExceptionCallback($config['exception_callback']);
 
         return $consumerConfig;
+    }
+
+    protected function getCacheKey(string $poolName, array $options): string
+    {
+        $topics = $options['topic'] ?? [];
+        sort($topics);
+
+        // Include consumer_name (instance ID) in cache key so that processes>1
+        // on the same pod each get their own Consumer instance with unique group_instance_id.
+        $instanceId = $options['consumer_name'] ?? '';
+
+        return $poolName . ':' . implode(',', $topics) . ':' . $instanceId;
     }
 }

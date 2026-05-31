@@ -35,6 +35,7 @@ class ConsumerManager
             $process = $this->createProcess($stream);
             $process->name = $key;
             $process->nums = $this->config->get(sprintf('event_stream.consumer.processes.%s', $key), 1);
+            $process->concurrent = $this->config->get(sprintf('event_stream.consumer.concurrent.%s', $key), 1);
 
             ProcessManager::register($process);
         }
@@ -45,6 +46,8 @@ class ConsumerManager
         $groupName = $this->config->get('event_stream.group_name', 'menumbing');
 
         return new class($this->container, $stream, $groupName) extends ConsumerProcess {
+            private ?ConsumerEventHandler $cachedHandler = null;
+
             public function __construct(
                 ContainerInterface $container,
                 array $stream,
@@ -59,7 +62,7 @@ class ConsumerManager
 
             protected function handler(): callable
             {
-                return make(ConsumerEventHandler::class);
+                return $this->cachedHandler ??= make(ConsumerEventHandler::class);
             }
         };
     }

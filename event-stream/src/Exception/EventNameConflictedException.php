@@ -11,7 +11,7 @@ use Exception;
  */
 class EventNameConflictedException extends Exception
 {
-    public function __construct(string $eventName, int $code = 0, \Throwable $previous = null)
+    public function __construct(string $eventName, int $code = 0, ?\Throwable $previous = null)
     {
         parent::__construct(sprintf('Event name "%s" is conflicted', $eventName), $code, $previous);
     }

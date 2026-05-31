@@ -38,6 +38,29 @@ return [
                 'wait_time'        => 100, // Wait time in milliseconds between read attempts
                 'retention_period' => 7, // Message retention period in days
                 'approx' => false, // Use approximate for deleting messages
+
+                /**
+                 * Kafka-specific options (ignored by Redis driver):
+                 *
+                 * - min_bytes: Minimum bytes the broker should return for a fetch request.
+                 *   When set, the broker waits until enough data has accumulated before responding.
+                 *   This improves throughput by reducing the number of small fetch round-trips.
+                 *   Recommended: 512 or higher for high-throughput topics.
+                 *   Default (Kafka): 1 byte (respond immediately with any available data).
+                 *
+                 * - max_wait: Maximum time (in milliseconds) the broker will wait for a fetch
+                 *   request to accumulate enough data before responding. This is the broker-side
+                 *   equivalent of `wait_time` and caps how long fetchMessages() can block.
+                 *   Must be lower than `wait_time` to avoid consumer stalls — if max_wait is
+                 *   greater than wait_time, the consumer loop may block on fetchMessages() longer
+                 *   than its intended budget, causing other consumers to appear stuck.
+                 *   Recommended: 200–400ms when wait_time is 500–1000ms.
+                 *   Default (Kafka): 500ms.
+                 *
+                 * Example:
+                 *   'min_bytes' => 512,
+                 *   'max_wait'  => 300,
+                 */
             ],
         ],
     ],
@@ -49,7 +72,7 @@ return [
      * Options:
      * - processes: Array of process configurations for different streams.
      * Each key represents a stream identifier with the value being the number of processes.
-     * Example: ['stream1' => 2] will create 2 processes for 'stream1'
+     * Example: ['default:stream1' => 2] will create 2 processes for 'stream1'
      *
      * - block_for: The number of seconds to sleep between processing batches of messages.
      * This helps control the consumption rate and system resources.
@@ -58,9 +81,17 @@ return [
      *               for reprocessing if not acknowledged
      */
     'consumer' => [
-        'processes' => [],
+        'processes' => [
+            // Key format: 'driver:stream-name' => <number of processes>
+            // Example: 'default:loan-events' => 2
+        ],
         'block_for' => 1,
         'retry_after' => 60,
+        'concurrent' => [
+            // Key format: 'driver:stream-name' => <number of concurrent coroutines>
+            // Default: 1 (sequential). Only increase for non-financial/non-ordered streams.
+            // Example: 'default:notification-events' => 3
+        ],
     ],
 
     /**

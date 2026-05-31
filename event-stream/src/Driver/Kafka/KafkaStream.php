@@ -27,6 +27,19 @@ class KafkaStream implements StreamInterface
      */
     protected array $pendingMessages = [];
 
+    protected ?string $consumerName = null;
+
+    /**
+     * Set the consumer name used for Kafka static membership (group_instance_id).
+     * Called by ConsumerProcess before subscribe() — the name is derived from
+     * stream name + hostname + process index, making it deterministic and stable
+     * across pod restarts (instant rejoin without rebalance).
+     */
+    public function setConsumerName(string $consumerName): void
+    {
+        $this->consumerName = $consumerName;
+    }
+
     public function __construct(
         ProducerManager $producerManager,
         protected ConsumerFactory $consumerFactory,
@@ -46,7 +59,7 @@ class KafkaStream implements StreamInterface
     public function publish(StreamMessage $message): string
     {
         $stream = $message->stream;
-        $messageId = $messageId ?? $this->id->newId();
+        $messageId = $message->id ?? $this->id->newId();
 
         $this->producer->send(
             $stream,
@@ -59,13 +72,14 @@ class KafkaStream implements StreamInterface
 
     public function subscribe(string $consumer, string $group, array $streams): Generator
     {
-        $consumer = $this->getConsumer($group, $streams);
+        $kafkaConsumer = $this->getConsumer($group, $streams);
 
         $waitTimeout = $this->options['wait_time'] ?? 100;
         $start = microtime(true);
 
+        // Wait for at least 1 message to arrive
         while (true) {
-            if (null !== $message = $consumer->consume()) {
+            if (null !== $message = $kafkaConsumer->consume()) {
                 break;
             }
 
@@ -78,11 +92,29 @@ class KafkaStream implements StreamInterface
             Coroutine::sleep(0.005);
         }
 
-        if (null !== $message) {
-            $key = $message->getTopic().'.'.$message->getKey();
+        if (null === $message) {
+            return;
+        }
 
+        // Yield the first message
+        $key = $message->getTopic() . '.' . $message->getKey();
+        $this->pendingMessages[$key] = $message;
+        yield $message->getTopic() => $this->deserialize($message->getKey(), ['message' => $message->getValue()]);
+
+        // Drain any remaining messages already buffered in-memory (no new fetchMessages() call).
+        // We use Reflection to peek the private $messages buffer so we only drain what's already
+        // fetched — avoiding a busy-loop from triggering another network round-trip.
+        // With multiple partitions, a single fetchMessages() call returns records from all partitions
+        // at once, allowing processBatch() to process them concurrently.
+        $refProp = new \ReflectionProperty($kafkaConsumer, 'messages');
+        $refProp->setAccessible(true);
+        while ([] !== $refProp->getValue($kafkaConsumer)) {
+            $message = $kafkaConsumer->consume();
+            if (null === $message) {
+                break;
+            }
+            $key = $message->getTopic() . '.' . $message->getKey();
             $this->pendingMessages[$key] = $message;
-
             yield $message->getTopic() => $this->deserialize($message->getKey(), ['message' => $message->getValue()]);
         }
     }
@@ -99,8 +131,9 @@ class KafkaStream implements StreamInterface
 
         foreach ($ids as $id) {
             $key = $stream.'.'.$id;
-            if (null !== $message = $this->pendingMessages[$key]) {
+            if (null !== $message = $this->pendingMessages[$key] ?? null) {
                 $consumer->ack($message);
+                unset($this->pendingMessages[$key]);
                 ++$count;
             }
         }
@@ -118,13 +151,23 @@ class KafkaStream implements StreamInterface
 
     protected function getConsumer(string $group, array $streams): Consumer
     {
-        return $this->consumerFactory->get(
-            $this->options['pool'] ?? 'default',
-            [
-                ...$this->options,
-                'group_id' => $group,
-                'topic'    => $streams,
-            ]
-        );
+        // Kafka requires each consumer group to subscribe to the same set of topics.
+        // Append stream name(s) to group_id so each stream gets its own isolated consumer group,
+        // while still allowing multiple pods to share the same group per stream (scale-out).
+        $groupId = $group . '-' . implode('_', $streams);
+
+        $options = [
+            ...$this->options,
+            'group_id' => $groupId,
+            'topic'    => $streams,
+        ];
+
+        // Forward consumer name for deterministic group_instance_id (static membership).
+        // This enables instant rejoin on pod restart without waiting for session_timeout.
+        if ($this->consumerName !== null) {
+            $options['consumer_name'] = $this->consumerName;
+        }
+
+        return $this->consumerFactory->get($this->options['pool'] ?? 'default', $options);
     }
 }
