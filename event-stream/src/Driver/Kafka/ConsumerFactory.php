@@ -41,6 +41,11 @@ class ConsumerFactory
         return $consumer;
     }
 
+    public function release(string $poolName, array $options): void
+    {
+        unset($this->consumers[$this->getCacheKey($poolName, $options)]);
+    }
+
     protected function getConfig(string $poolName, array $options): ConsumerConfig
     {
         if (null === $config =  $this->config->get('kafka.' . $poolName)) {

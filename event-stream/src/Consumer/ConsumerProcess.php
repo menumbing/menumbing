@@ -112,8 +112,10 @@ abstract class ConsumerProcess extends AbstractProcess
                     $this->processBatch($messages);
                 }
             } catch (Throwable $e) {
-                $this->event?->dispatch(new SubscribeFailed($consumerName, $this->groupName, $this->streamName, $this->driverName, $e));
-                $this->logThrowable($e);
+                if (!$this->shouldSuppressRecoverableSubscribeError($e)) {
+                    $this->event?->dispatch(new SubscribeFailed($consumerName, $this->groupName, $this->streamName, $this->driverName, $e));
+                    $this->logThrowable($e);
+                }
             }
 
             if (CoordinatorManager::until(Constants::WORKER_EXIT)->yield($this->config->get('event_stream.consumer.block_for', 1))) {
@@ -198,6 +200,26 @@ abstract class ConsumerProcess extends AbstractProcess
         $processName = str_replace([':', '_'], '-', $this->name);
 
         return $processName . '-' . gethostname();
+    }
+
+    protected function shouldSuppressRecoverableSubscribeError(Throwable $e): bool
+    {
+        if (!$this->config->get('event_stream.consumer.suppress_recoverable_subscribe_errors', false)) {
+            return false;
+        }
+
+        if (!is_a($e, 'longlang\\phpkafka\\Exception\\KafkaErrorException')) {
+            return false;
+        }
+
+        return in_array($e->getCode(), $this->config->get('event_stream.consumer.recoverable_subscribe_error_codes', [
+            14, // COORDINATOR_LOAD_IN_PROGRESS
+            15, // COORDINATOR_NOT_AVAILABLE
+            16, // NOT_COORDINATOR
+            25, // UNKNOWN_MEMBER_ID
+            27, // REBALANCE_IN_PROGRESS
+            82, // FENCED_INSTANCE_ID
+        ]), true);
     }
 
     protected function skipException(Throwable $e): bool

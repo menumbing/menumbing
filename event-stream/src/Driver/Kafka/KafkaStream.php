@@ -14,6 +14,7 @@ use Menumbing\Contract\EventStream\StreamInterface;
 use Menumbing\Contract\EventStream\StreamMessage;
 use Swoole\Coroutine;
 use Symfony\Component\Serializer\Serializer;
+use Throwable;
 
 /**
  * @author  Iqbal Maulana <iq.bluejack@gmail.com>
@@ -72,24 +73,32 @@ class KafkaStream implements StreamInterface
 
     public function subscribe(string $consumer, string $group, array $streams): Generator
     {
-        $kafkaConsumer = $this->getConsumer($group, $streams);
+        $poolName = $this->options['pool'] ?? 'default';
+        $consumerOptions = $this->getConsumerOptions($group, $streams);
+        $kafkaConsumer = $this->consumerFactory->get($poolName, $consumerOptions);
 
         $waitTimeout = $this->options['wait_time'] ?? 100;
         $start = microtime(true);
 
-        // Wait for at least 1 message to arrive
-        while (true) {
-            if (null !== $message = $kafkaConsumer->consume()) {
-                break;
+        try {
+            // Wait for at least 1 message to arrive
+            while (true) {
+                if (null !== $message = $kafkaConsumer->consume()) {
+                    break;
+                }
+
+                $elapsed = (microtime(true) - $start) * 1000;
+
+                if ($elapsed >= $waitTimeout) {
+                    break;
+                }
+
+                Coroutine::sleep(0.005);
             }
+        } catch (Throwable $e) {
+            $this->consumerFactory->release($poolName, $consumerOptions);
 
-            $elapsed = (microtime(true) - $start) * 1000;
-
-            if ($elapsed >= $waitTimeout) {
-                break;
-            }
-
-            Coroutine::sleep(0.005);
+            throw $e;
         }
 
         if (null === $message) {
@@ -151,6 +160,11 @@ class KafkaStream implements StreamInterface
 
     protected function getConsumer(string $group, array $streams): Consumer
     {
+        return $this->consumerFactory->get($this->options['pool'] ?? 'default', $this->getConsumerOptions($group, $streams));
+    }
+
+    protected function getConsumerOptions(string $group, array $streams): array
+    {
         // Kafka requires each consumer group to subscribe to the same set of topics.
         // Append stream name(s) to group_id so each stream gets its own isolated consumer group,
         // while still allowing multiple pods to share the same group per stream (scale-out).
@@ -168,6 +182,6 @@ class KafkaStream implements StreamInterface
             $options['consumer_name'] = $this->consumerName;
         }
 
-        return $this->consumerFactory->get($this->options['pool'] ?? 'default', $options);
+        return $options;
     }
 }

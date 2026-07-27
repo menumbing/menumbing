@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Menumbing\EventStream\Driver\Redis\DefaultRedisId;
 use Menumbing\EventStream\Driver\Redis\RedisStream;
 use Menumbing\EventStream\Enum\ReadMessageFrom;
@@ -87,6 +89,21 @@ return [
         ],
         'block_for' => 1,
         'retry_after' => 60,
+
+        /**
+         * Suppress noisy subscribe logs for recoverable Kafka group membership/coordinator errors.
+         * Default is false to preserve existing logging behavior unless explicitly enabled.
+         */
+        'suppress_recoverable_subscribe_errors' => false,
+        'recoverable_subscribe_error_codes' => [
+            14, // COORDINATOR_LOAD_IN_PROGRESS
+            15, // COORDINATOR_NOT_AVAILABLE
+            16, // NOT_COORDINATOR
+            25, // UNKNOWN_MEMBER_ID
+            27, // REBALANCE_IN_PROGRESS
+            82, // FENCED_INSTANCE_ID
+        ],
+
         'concurrent' => [
             // Key format: 'driver:stream-name' => <number of concurrent coroutines>
             // Default: 1 (sequential). Only increase for non-financial/non-ordered streams.
