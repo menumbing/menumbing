@@ -13,7 +13,15 @@
             "Menumbing\\Tracer\\": "tracer/src",
             "Menumbing\\GraphQL\\": "graphql/src",
             "Menumbing\\OAuth2\\ResourceServer\\": "oauth2-resource-server/src",
-            "Menumbing\\GracefulProcess\\": "graceful-process/src"
+            "Menumbing\\GracefulProcess\\": "graceful-process/src",
+            "Menumbing\\EventStream\\": "event-stream/src",
+            "Menumbing\\Serializer\\": "serializer/src",
+            "Menumbing\\Outbox\\": "outbox/src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HyperfTest\\": "outbox/tests/"
         }
     },
     "authors": [
