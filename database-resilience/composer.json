@@ -1,0 +1,64 @@
+{
+    "name": "menumbing/database-resilience",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "hyperf",
+        "database",
+        "resilience",
+        "lost-connection",
+        "pgsql",
+        "postgresql"
+    ],
+    "description": "Connection resilience for Hyperf databases, starting with lost connection detection for the pgsql and pgsql-swoole drivers.",
+    "autoload": {
+        "psr-4": {
+            "Menumbing\\Database\\Resilience\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HyperfTest\\Database\\Resilience\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.1",
+        "hyperf/database": "^3.1",
+        "hyperf/di": "^3.1",
+        "hyperf/stringable": "^3.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "hyperf/config": "^3.1",
+        "hyperf/database-pgsql": "^3.1",
+        "mockery/mockery": "^1.0",
+        "phpstan/phpstan": "^1.0",
+        "phpunit/phpunit": "^10.0",
+        "swoole/ide-helper": "^4.5"
+    },
+    "suggest": {
+        "hyperf/database-pgsql": "Required to use the pgsql or pgsql-swoole driver.",
+        "menumbing/database-pgsql": "Drop-in alternative to hyperf/database-pgsql, exposes the same Hyperf\\Database\\PgSQL namespace.",
+        "ext-swoole": "Required to use the pgsql-swoole driver, must be built with --enable-swoole-pgsql."
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit -c phpunit.xml --colors=always",
+        "analyse": "phpstan analyse --memory-limit 1024M -l 0 ./src",
+        "cs-fix": "php-cs-fixer fix $1"
+    },
+    "extra": {
+        "hyperf": {
+            "config": "Menumbing\\Database\\Resilience\\ConfigProvider"
+        },
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    }
+}

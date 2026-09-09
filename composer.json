@@ -13,7 +13,8 @@
             "Menumbing\\Tracer\\": "tracer/src",
             "Menumbing\\GraphQL\\": "graphql/src",
             "Menumbing\\OAuth2\\ResourceServer\\": "oauth2-resource-server/src",
-            "Menumbing\\GracefulProcess\\": "graceful-process/src"
+            "Menumbing\\GracefulProcess\\": "graceful-process/src",
+            "Menumbing\\Database\\Resilience\\": "database-resilience/src"
         }
     },
     "authors": [

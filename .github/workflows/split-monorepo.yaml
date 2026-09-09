@@ -49,6 +49,8 @@ jobs:
             split_repository: 'oauth2-resource-server'
           - local_path: 'graceful-process'
             split_repository: 'graceful-process'
+          - local_path: 'database-resilience'
+            split_repository: 'database-resilience'
 
     steps:
       - uses: actions/checkout@v2
