@@ -16,6 +16,8 @@ class EventRegistry
 {
     protected array $events = [];
 
+    protected bool $initialized = false;
+
     public function init(): void
     {
         $classes = AnnotationCollector::getClassesByAnnotation(ConsumedEvent::class) ?? [];
@@ -34,6 +36,15 @@ class EventRegistry
                 'class' => $class,
                 'retries' => $annotation->retries,
             ];
+        }
+
+        $this->initialized = true;
+    }
+
+    public function ensureInitialized(): void
+    {
+        if (!$this->initialized) {
+            $this->init();
         }
     }
 

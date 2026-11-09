@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Menumbing\EventStream\Tests\Support;
+
+use Closure;
+use Menumbing\Contract\EventStream\StreamMessage;
+use Menumbing\EventStream\Command\DlqReplayCommand;
+
+/**
+ * @author  Luki Centuri <lukicenturi@gmail.com>
+ */
+final class TestableDlqReplayCommand extends DlqReplayCommand
+{
+    /** @var list<StreamMessage> */
+    public array $dispatched = [];
+
+    /** @var list<string> */
+    public array $calls = [];
+
+    /** @var list<string> */
+    public array $unknownTypes = [];
+
+    public ?Closure $script = null;
+
+    protected function handler(): callable
+    {
+        return function (string $group, StreamMessage $message) {
+            $this->dispatched[] = $message;
+
+            return ($this->script)($message);
+        };
+    }
+
+    protected function knowsType(string $type): bool
+    {
+        return !in_array($type, $this->unknownTypes, true);
+    }
+
+    protected function bootRuntime(): void
+    {
+        $this->calls[] = 'boot';
+    }
+
+    protected function leaveGroup(string $group, string $deadLetterStream): void
+    {
+        $this->calls[] = 'leave:' . $deadLetterStream;
+        parent::leaveGroup($group, $deadLetterStream);
+    }
+
+    protected function clearTimers(): void
+    {
+        $this->calls[] = 'clear-timers';
+    }
+}

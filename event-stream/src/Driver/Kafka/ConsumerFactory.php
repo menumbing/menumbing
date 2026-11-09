@@ -34,7 +34,8 @@ class ConsumerFactory
             return $consumer;
         }
 
-        $consumer = new Consumer($this->getConfig($poolName, $options));
+        $consumerClass = $this->getConsumerClass($options);
+        $consumer = new $consumerClass($this->getConfig($poolName, $options));
 
         $this->consumers[$cacheKey] = $consumer;
 
@@ -44,6 +45,26 @@ class ConsumerFactory
     public function release(string $poolName, array $options): void
     {
         unset($this->consumers[$this->getCacheKey($poolName, $options)]);
+    }
+
+    public function close(string $poolName, array $options): void
+    {
+        $cacheKey = $this->getCacheKey($poolName, $options);
+
+        if (null === $consumer = $this->consumers[$cacheKey] ?? null) {
+            return;
+        }
+
+        unset($this->consumers[$cacheKey]);
+        $consumer->close();
+    }
+
+    /**
+     * @return class-string<Consumer>
+     */
+    protected function getConsumerClass(array $options): string
+    {
+        return 'earliest' === ($options['offset_reset'] ?? null) ? EarliestOffsetConsumer::class : Consumer::class;
     }
 
     protected function getConfig(string $poolName, array $options): ConsumerConfig
